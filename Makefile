@@ -15,7 +15,7 @@ CUE      := $(DIST)/psxcel.cue
 GAMES_DIR ?= $(HOME)/Downloads/ps1 games
 GAME_NAME ?= PSXcel
 
-.PHONY: help build test disc render install clean psoxide
+.PHONY: help build test disc render install release clean psoxide
 
 help:
 	@echo "PSXcel targets:"
@@ -76,3 +76,10 @@ install: disc
 clean:
 	cd $(GAME) && cargo clean
 	rm -rf $(DIST)
+
+# Stage the itch.io payload. CI (deploy.yml) pushes release/ via butler
+# whenever it changes on main, versioned from the VERSION file.
+release: disc
+	@mkdir -p $(ROOT)/release
+	cp "$(BIN)" "$(CUE)" $(ROOT)/release/
+	@echo "RELEASE -> $(ROOT)/release (commit + push to deploy)"

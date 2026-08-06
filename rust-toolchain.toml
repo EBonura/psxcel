@@ -1,0 +1,6 @@
+[toolchain]
+# Nightly required: `mipsel-sony-psx` target, `build-std`, and the SDK's
+# asm_experimental_arch trampolines. Date-pinned to PSoXide's own toolchain
+# pin so builds are reproducible; bump the two together.
+channel    = "nightly-2026-03-25"
+components = ["rustfmt", "clippy", "rust-src", "llvm-tools"]

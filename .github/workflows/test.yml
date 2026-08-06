@@ -1,0 +1,16 @@
+name: host tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the pinned nightly
+        run: |
+          rustup toolchain install nightly-2026-03-25 --component rust-src
+          rustup default nightly-2026-03-25
+      - name: Run the sheet.rs host suite
+        run: make test

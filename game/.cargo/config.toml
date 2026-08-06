@@ -1,0 +1,8 @@
+# Build for the PlayStation 1 by default, so a plain `cargo build --release`
+# produces a PSX-EXE (same setup as oot-psx / the pico8-psx games).
+[build]
+target = "mipsel-sony-psx"
+
+[unstable]
+build-std = ["core"]
+build-std-features = ["compiler-builtins-mem"]

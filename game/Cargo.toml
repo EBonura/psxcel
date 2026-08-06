@@ -1,0 +1,35 @@
+[package]
+name    = "psxcel"
+version = "0.2.0"
+edition = "2021"
+
+# Standalone workspace (not at repo root) so the PSX-target .cargo/config can't
+# leak onto host tools built from the submodule. Same layout as oot-psx.
+[workspace]
+
+[[bin]]
+name = "psxcel"
+path = "src/main.rs"
+
+[profile.release]
+panic         = "abort"
+codegen-units = 1
+lto           = true
+
+# SDK + engine crates from the pinned PSoXide (.psoxide is a submodule
+# or a symlink to a sibling working copy). A spreadsheet needs no 3D / CD / audio:
+# just the engine loop, a bitmap font, VRAM for the atlas, pad input, and the GPU
+# for the cursor-highlight rect.
+[dependencies]
+psx-engine = { path = "../.psoxide/engine/crates/psx-engine" }
+psx-rt     = { path = "../.psoxide/sdk/crates/psx-rt" }
+psx-font   = { path = "../.psoxide/sdk/crates/psx-font" }
+psx-vram   = { path = "../.psoxide/sdk/crates/psx-vram" }
+psx-pad    = { path = "../.psoxide/sdk/crates/psx-pad" }
+psx-gpu    = { path = "../.psoxide/sdk/crates/psx-gpu" }
+# On-screen keyboard (promoted to the SDK from this repo's keyboard.rs).
+psx-osk    = { path = "../.psoxide/sdk/crates/psx-osk" }
+# Fixed-point sin/cos LUT, for pie-chart slice geometry.
+psx-math   = { path = "../.psoxide/sdk/crates/psx-math" }
+# Memory-card save/load (this repo's psx-mc SDK crate), with save compression.
+psx-mc     = { path = "../.psoxide/sdk/crates/psx-mc", features = ["compress"] }

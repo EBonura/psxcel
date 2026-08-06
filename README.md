@@ -122,6 +122,15 @@ truncated; select the cell to see the full value in the formula bar.
 References are a single column letter + 1-based row. Names are case-insensitive
 (`if` == `IF`, `a1` == `A1`). Errors show `#ERR`.
 
+## Play it
+
+The disc image is on [itch.io](https://bonnie-studios.itch.io/psxcel). PSXcel
+also ships on the
+[PSoXide Demo Disc](https://bonnie-studios.itch.io/psoxide-demo-disc) with
+nine other programs, and that disc runs
+[in your browser](https://bonnie-studios.itch.io/psoxide) on the PSoXide
+page, no console needed.
+
 ## Build
 
 Needs the nightly toolchain in `rust-toolchain.toml` (the `mipsel-sony-psx`

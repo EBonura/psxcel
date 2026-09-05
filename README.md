@@ -1,11 +1,15 @@
 # PSXcel
 
+Start with the [PSoXide Demo Disc](https://bonnie-studios.itch.io/psoxide-demo-disc): it includes PSXcel
+and the other Bonnie Studios PlayStation demos. Standalone downloads are available
+for testing just this project.
+
 **A spreadsheet that boots on a real PlayStation 1.**
 
 PSX + Excel (and PSX + "cel", as in cells). A working, gamepad-driven spreadsheet
 for the original PlayStation, written in Rust on the
-[PSoXide](https://github.com/EBonura/PSoXide) SDK. Cells, formulas, charts, themes
-and memory-card saves, all driven by a controller, running on 1994 hardware.
+[PSoXide](https://github.com/EBonura/PSoXide) SDK. It supports formulas, charts, themes
+and memory-card saves.
 
 ![PSXcel](docs/screenshot.png)
 
@@ -233,3 +237,8 @@ psoxide-pin/     the SDK revision, owned by Cargo; `make` hydrates it to .psoxid
 
 Built on [PSoXide](https://github.com/EBonura/PSoXide). Inspired by `sc` / `sc-im`
 and, obviously, every spreadsheet that came before.
+
+## Recent changes
+
+Source snapshot **2026.09.05**: Host tests now hydrate the pinned dependencies automatically.
+See the [changelog](CHANGELOG.md) for the remaining changes and published download versions.

@@ -450,7 +450,9 @@ fn read_number(b: &[u8], p: &mut usize) -> Option<i64> {
     let mut int_part: i64 = 0;
     let mut any = false;
     while *p < b.len() && b[*p].is_ascii_digit() {
-        int_part = int_part.checked_mul(10)?.checked_add((b[*p] - b'0') as i64)?;
+        int_part = int_part
+            .checked_mul(10)?
+            .checked_add((b[*p] - b'0') as i64)?;
         *p += 1;
         any = true;
     }
@@ -1241,7 +1243,7 @@ mod tests {
         sh.set(1, 2, b"2"); // B3
         sh.set(2, 2, b"2.25"); // C3
         sh.set(3, 1, b"=B2*C2"); // D2 = 4.5
-        // Fill D2's formula down into D2:D3.
+                                 // Fill D2's formula down into D2:D3.
         sh.fill(3, 1, b"=B2*C2", 3, 1, 3, 2);
         assert_eq!(sh.cells[idx(3, 1)].raw(), b"=B2*C2");
         assert_eq!(sh.cells[idx(3, 1)].value, 9 * ONE / 2); // 4.5
@@ -1252,7 +1254,10 @@ mod tests {
     #[test]
     fn row_insert_shifts_refs_below() {
         assert_eq!(rw("=A5+A2", Shift::Rows { at: 3, delta: 1 }), "=A6+A2");
-        assert_eq!(rw("=SUM(A4:A9)", Shift::Rows { at: 3, delta: 1 }), "=SUM(A5:A10)");
+        assert_eq!(
+            rw("=SUM(A4:A9)", Shift::Rows { at: 3, delta: 1 }),
+            "=SUM(A5:A10)"
+        );
         // A reference above the inserted line is untouched.
         assert_eq!(rw("=A1", Shift::Rows { at: 3, delta: 1 }), "=A1");
     }
@@ -1389,7 +1394,7 @@ mod tests {
         assert_eq!(fmt_value(0, &mut b), "0");
         // A four-decimal value now round-trips through the formatter.
         assert_eq!(fmt_value(ONE / 8, &mut b), "0.125"); // 0.1250 -> "0.125"
-        // A value far beyond the old i32 range formats fine.
+                                                         // A value far beyond the old i32 range formats fine.
         assert_eq!(fmt_value(1_234_567 * ONE, &mut b), "1234567");
     }
 }

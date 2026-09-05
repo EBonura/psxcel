@@ -31,16 +31,16 @@ extern crate psx_rt;
 mod sheet;
 mod theme;
 
-use psx_osk::{Action, Dir, Keyboard};
-use theme::{theme, Rgb};
 use psx_engine::{button, App, Config, Ctx, Scene};
-use psx_mc::{Card, Entry, Error as McError, HardwareCard, Slot};
-use psx_pad::PadTracker;
 use psx_font::{fonts::SPLEEN_5X8, FontAtlas};
 use psx_gpu::{draw_line_mono, draw_quad_flat, draw_rect_flat, draw_tri_flat};
 use psx_math::fmt::u32_dec;
 use psx_math::sincos::{cos_q12, sin_q12};
+use psx_mc::{Card, Entry, Error as McError, HardwareCard, Slot};
+use psx_osk::{Action, Dir, Keyboard};
+use psx_pad::PadTracker;
 use psx_vram::{Clut, TexDepth, Tpage};
+use theme::{theme, Rgb};
 
 use sheet::{fmt_value, fmt_value_fit, idx, Kind, Sheet, COLS, ROWS};
 
@@ -65,8 +65,7 @@ const VIS_ROWS: usize = 24;
 const GRID_TOP: i16 = GRID_Y0 - 1;
 const GRID_Y1: i16 = GRID_TOP + (VIS_ROWS as i16) * ROW_H - 1;
 /// The same, for when the on-screen keyboard is covering the lower screen.
-const KBD_GRID_Y1: i16 =
-    GRID_TOP + ((psx_osk::Y0 - 14 - GRID_TOP) / ROW_H) * ROW_H - 1;
+const KBD_GRID_Y1: i16 = GRID_TOP + ((psx_osk::Y0 - 14 - GRID_TOP) / ROW_H) * ROW_H - 1;
 
 /// Control hint on the on-screen keyboard's panel (Edit mode).
 const KBD_HINT: &str = "X:Key L2+<>:Caret SQ:Del R2:OK R1:Cell O:Back";
@@ -168,7 +167,9 @@ fn card_has_save() -> bool {
     let mut card = Card::new(HardwareCard::new(Slot::One));
     let mut entries = [EMPTY_ENTRY; MAX_FILES];
     match card.list(&mut entries) {
-        Ok(k) => entries[..k].iter().any(|e| e.name().starts_with(SAVE_PREFIX)),
+        Ok(k) => entries[..k]
+            .iter()
+            .any(|e| e.name().starts_with(SAVE_PREFIX)),
         Err(_) => false,
     }
 }
@@ -508,11 +509,7 @@ impl Editor {
     fn update_nav(&mut self, ctx: &mut Ctx) {
         // Hold L2 to jump a whole screen at a time (page navigation).
         let l2 = ctx.is_held(button::L2);
-        let (dc, dr) = if l2 {
-            (VIS_COLS, VIS_ROWS)
-        } else {
-            (1, 1)
-        };
+        let (dc, dr) = if l2 { (VIS_COLS, VIS_ROWS) } else { (1, 1) };
         if self.stepped(button::LEFT) {
             self.cur_col = self.cur_col.saturating_sub(dc);
         }
@@ -868,8 +865,20 @@ impl Editor {
             // Block usage on the right.
             let mut bb = [0u8; 8];
             let bs = u32_dec(&mut bb, self.files[i].blocks as u32);
-            text(font, x + 196, y, bs, if sel { t.accent_text } else { t.dim });
-            text(font, x + 204, y, "blk", if sel { t.accent_text } else { t.dim });
+            text(
+                font,
+                x + 196,
+                y,
+                bs,
+                if sel { t.accent_text } else { t.dim },
+            );
+            text(
+                font,
+                x + 204,
+                y,
+                "blk",
+                if sel { t.accent_text } else { t.dim },
+            );
             y += 14;
         }
         draw_cmdbar(font, "D-Pad:Move  X:Load  SQ:Delete  O:Back", "");
@@ -1037,7 +1046,13 @@ impl Editor {
             .count();
         let mut cnt = [0u8; 12];
         let cn = build_frac(nth, commands, &mut cnt);
-        text(font, x + w - 4 - (cn as i16) * GW, y + 8, str_of(&cnt[..cn]), t.dim);
+        text(
+            font,
+            x + w - 4 - (cn as i16) * GW,
+            y + 8,
+            str_of(&cnt[..cn]),
+            t.dim,
+        );
 
         for slot in 0..Self::CMD_VIS {
             let i = self.menu_top + slot;
@@ -1144,7 +1159,13 @@ impl Editor {
         };
         text(font, x + 10, y + 10, q, t.bad);
         text(font, x + 10, y + 24, clip(subject, 38), t.text);
-        text(font, x + 10, y + 40, "X:Yes, delete    O:No, keep it", t.dim);
+        text(
+            font,
+            x + 10,
+            y + 40,
+            "X:Yes, delete    O:No, keep it",
+            t.dim,
+        );
     }
 
     /// Display name of the browser's highlighted save, for the confirm prompt.
@@ -1405,7 +1426,8 @@ impl Editor {
             self.toast("LINE FULL", true);
             return;
         }
-        self.edit_buf.copy_within(self.caret..self.edit_len, self.caret + 1);
+        self.edit_buf
+            .copy_within(self.caret..self.edit_len, self.caret + 1);
         self.edit_buf[self.caret] = c;
         self.edit_len += 1;
         self.caret += 1;
@@ -1416,7 +1438,8 @@ impl Editor {
         if self.caret == 0 {
             return;
         }
-        self.edit_buf.copy_within(self.caret..self.edit_len, self.caret - 1);
+        self.edit_buf
+            .copy_within(self.caret..self.edit_len, self.caret - 1);
         self.edit_len -= 1;
         self.caret -= 1;
     }
@@ -1452,7 +1475,13 @@ impl Editor {
         if self.saving {
             text(font, 4, FBAR_Y, "SAVE AS:", t.good);
             let cx = 4 + 9 * GW;
-            text(font, cx, FBAR_Y, str_of(&self.edit_buf[..self.edit_len]), t.text);
+            text(
+                font,
+                cx,
+                FBAR_Y,
+                str_of(&self.edit_buf[..self.edit_len]),
+                t.text,
+            );
             self.draw_caret(cx);
             self.draw_col_headers(font, acol);
             return;
@@ -1528,7 +1557,13 @@ impl Editor {
             let x = ROWHDR_W + (vc as i16) * COL_W;
             let letter = [b'A' + col as u8];
             let tint = if col == acol { t.hot } else { t.dim };
-            text(font, x + COL_W / 2 - GW / 2, COLHDR_Y, str_of(&letter), tint);
+            text(
+                font,
+                x + COL_W / 2 - GW / 2,
+                COLHDR_Y,
+                str_of(&letter),
+                tint,
+            );
         }
     }
 
@@ -1705,7 +1740,6 @@ impl Editor {
             }
             ChartKind::Pie => {} // handled above
         }
-
     }
 
     /// Pie chart of the selected range: slice angles proportional to each value's
@@ -1746,7 +1780,11 @@ impl Editor {
         let mut a0: u32 = 0;
         for i in 0..n {
             let frac = (vals[i].unsigned_abs() * 4096 / total) as u32;
-            let a1 = if i == n - 1 { 4096 } else { (a0 + frac).min(4096) };
+            let a1 = if i == n - 1 {
+                4096
+            } else {
+                (a0 + frac).min(4096)
+            };
             let c = SLICE_COLORS[i % SLICE_COLORS.len()];
             let mut a = a0;
             while a < a1 {
@@ -1873,8 +1911,9 @@ impl Editor {
                 }
                 let x = ROWHDR_W + (vc as i16) * COL_W;
                 let selected = col == acol && row == arow;
-                let in_range = range
-                    .is_some_and(|(c0, r0, c1, r1)| col >= c0 && col <= c1 && row >= r0 && row <= r1);
+                let in_range = range.is_some_and(|(c0, r0, c1, r1)| {
+                    col >= c0 && col <= c1 && row >= r0 && row <= r1
+                });
                 let in_ref = refs.tint_at(col, row);
                 if selected {
                     fill(x, y - 1, COL_W as u16, ROW_H as u16, self.cursor_color());
@@ -1887,7 +1926,15 @@ impl Editor {
                 } else if in_range {
                     fill(x, y - 1, COL_W as u16, ROW_H as u16, range_bg);
                 }
-                self.draw_cell(font, sh, col, row, x, y, selected || in_range || in_ref.is_some());
+                self.draw_cell(
+                    font,
+                    sh,
+                    col,
+                    row,
+                    x,
+                    y,
+                    selected || in_range || in_ref.is_some(),
+                );
             }
         }
         scissor_reset();
@@ -1947,7 +1994,16 @@ impl Editor {
         out
     }
 
-    fn draw_cell(&self, font: &FontAtlas, sh: &Sheet, col: usize, row: usize, x: i16, y: i16, sel: bool) {
+    fn draw_cell(
+        &self,
+        font: &FontAtlas,
+        sh: &Sheet,
+        col: usize,
+        row: usize,
+        x: i16,
+        y: i16,
+        sel: bool,
+    ) {
         let cell = &sh.cells[idx(col, row)];
         if cell.is_empty() {
             return;
@@ -2254,8 +2310,16 @@ type OpenChart = Option<(ChartKind, (usize, usize, usize, usize))>;
 const SAMPLES: &[(&str, fn(&mut Sheet), OpenChart)] = &[
     ("Blank", sample_blank, None),
     ("Budget", sample_budget, None),
-    ("Sales chart", sample_sales, Some((ChartKind::Bar, (1, 1, 1, 12)))), // B2:B13
-    ("Expenses", sample_expenses, Some((ChartKind::Pie, (1, 0, 1, 4)))),  // B1:B5
+    (
+        "Sales chart",
+        sample_sales,
+        Some((ChartKind::Bar, (1, 1, 1, 12))),
+    ), // B2:B13
+    (
+        "Expenses",
+        sample_expenses,
+        Some((ChartKind::Pie, (1, 0, 1, 4))),
+    ), // B1:B5
     ("Grades", sample_grades, None),
     ("Fibonacci", sample_fibonacci, None),
     ("Functions", sample_functions, None),

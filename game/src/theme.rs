@@ -55,30 +55,30 @@ impl Theme {
 // selection/cursor accent and the chrome are green, with a gold highlight for
 // the active row/column header and a mint "= result" echo.
 static DARK: Theme = Theme {
-    bg: (10, 16, 13),          // near-black, faint green
-    panel: (20, 34, 26),       // dark green chrome (formula bar / headers / kbd)
-    key: (38, 54, 44),         // green-gray key face
-    accent: (34, 150, 82),     // spreadsheet-green selection
+    bg: (10, 16, 13),      // near-black, faint green
+    panel: (20, 34, 26),   // dark green chrome (formula bar / headers / kbd)
+    key: (38, 54, 44),     // green-gray key face
+    accent: (34, 150, 82), // spreadsheet-green selection
     accent_text: (255, 255, 255),
     text: (224, 230, 224),
-    dim: (128, 150, 134),      // green-gray secondary
-    good: (150, 235, 168),     // bright mint for = results / ref tag
+    dim: (128, 150, 134),  // green-gray secondary
+    good: (150, 235, 168), // bright mint for = results / ref tag
     bad: (240, 110, 110),
-    hot: (245, 214, 120),      // gold: active row/column header
+    hot: (245, 214, 120), // gold: active row/column header
     sep: (30, 48, 38),
 };
 
 static LIGHT: Theme = Theme {
-    bg: (236, 243, 238),       // near-white, faint green
-    panel: (198, 224, 206),    // soft green chrome
-    key: (240, 246, 241),      // light key face
-    accent: (30, 140, 74),     // green selection
+    bg: (236, 243, 238),    // near-white, faint green
+    panel: (198, 224, 206), // soft green chrome
+    key: (240, 246, 241),   // light key face
+    accent: (30, 140, 74),  // green selection
     accent_text: (255, 255, 255),
-    text: (22, 34, 26),        // near-black, slightly green
-    dim: (86, 112, 94),        // green-gray secondary
-    good: (22, 110, 52),       // deep green for = results / ref tag
+    text: (22, 34, 26),  // near-black, slightly green
+    dim: (86, 112, 94),  // green-gray secondary
+    good: (22, 110, 52), // deep green for = results / ref tag
     bad: (188, 42, 42),
-    hot: (150, 110, 20),       // dark gold: active row/column header
+    hot: (150, 110, 20), // dark gold: active row/column header
     sep: (176, 198, 182),
 };
 

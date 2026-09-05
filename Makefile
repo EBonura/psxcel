@@ -48,7 +48,7 @@ build: psoxide
 # target is the PSX. --target <host> keeps the artifacts in their own subdir.
 # Single-threaded: recalc's snapshot scratch lives in statics (fine on the
 # single-threaded PS1, racy under libtest's parallel runner).
-test:
+test: psoxide
 	cargo test --manifest-path $(GAME)/Cargo.toml \
 		--target $$(rustc -vV | sed -n 's/host: //p') -- --test-threads=1
 

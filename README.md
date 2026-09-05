@@ -126,15 +126,15 @@ References are a single column letter + 1-based row. Names are case-insensitive
 
 The disc image is on [itch.io](https://bonnie-studios.itch.io/psxcel). PSXcel
 also ships on the
-[PSoXide Demo Disc](https://bonnie-studios.itch.io/psoxide-demo-disc) with
-nine other programs, and that disc runs
-[in your browser](https://bonnie-studios.itch.io/psoxide) on the PSoXide
+[PSoXide Demo Disc](https://bonnie-studios.itch.io/psoxide-demo-disc), which
+runs [in your browser](https://bonnie-studios.itch.io/psoxide) on the PSoXide
 page, no console needed.
 
 ## Build
 
-Needs the nightly toolchain in `rust-toolchain.toml` (the `mipsel-sony-psx`
-target + `build-std`). The PSoXide SDK is a Cargo pin in `psoxide-pin/`, which
+Install Rust through rustup, Make and host C/C++ build tools. The nightly
+toolchain in `rust-toolchain.toml` selects `mipsel-sony-psx` and `build-std`.
+The SDK and engine are retained at a historical Cargo pin in `psoxide-pin/`, which
 `make` hydrates into `.psoxide` before building, so a plain clone is enough:
 
 ```sh
@@ -147,6 +147,17 @@ make disc      # -> a burnable .bin/.cue in dist/
 make render    # headless emulator frame dump -> dist/frame.png
 make install   # copy into the ~/Downloads/ps1 games library
 ```
+
+The current [SDK](https://github.com/EBonura/PSoXide) and
+[engine](https://github.com/EBonura/PSoXide-editor) live in separate repositories.
+For integration builds, `PSOXIDE_FROM=/path/to/PSoXide-editor` accepts a
+bootstrapped editor checkout. Keep the resulting BIN/CUE files together and
+open the CUE in the separate
+[PSoXide emulator](https://github.com/EBonura/PSoXide-emulator). The legacy
+`make render` target and screenshot scripts use the historical hydrated
+frontend; with split overrides, invoke the standalone frontend directly.
+`make render` writes PPM on every host and additionally PNG when macOS `sips`
+is available.
 
 Every screenshot in `docs/` is generated, not hand-captured. `tools/shot.sh` boots
 the disc in PSoXide's headless emulator, replays a scripted controller sequence,

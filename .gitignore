@@ -9,5 +9,6 @@
 psoxide-pin/target/
 
 # Local dev tooling and the hydrated SDK cache: useful here, not part of the project.
-/tools/
+/tools/*
+!/tools/bootstrap-components.py
 /third_party/

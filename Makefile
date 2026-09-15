@@ -26,17 +26,16 @@ help:
 	@echo "  make install - disc + copy into the PSoXide game library ($(GAMES_DIR))"
 	@echo "  make clean   - remove build output"
 
-# Which PSoXide this is built against. Cargo owns the pin (psoxide-pin/), and
-# psoxide-link copies the resolved checkout to .psoxide so the path
-# dependencies and the linker script resolve. PSOXIDE_FROM=/path/to/tree
-# overrides it, which is how the demo disc puts every program on one SDK.
+# components.lock.json pins the split SDK and editor/engine sources.
+# PSOXIDE_FROM overrides them with a bootstrapped editor checkout for disc builds.
+FRONTEND ?= frontend
 PSOXIDE_FROM ?=
 psoxide:
 	@if [ -n "$(PSOXIDE_FROM)" ]; then \
 		cargo run -q --manifest-path $(PSOXIDE_FROM)/tools/psoxide-link/Cargo.toml -- \
 			--from "$(PSOXIDE_FROM)" --into $(PSOXIDE); \
 	else \
-		cargo run -q --manifest-path $(ROOT)/psoxide-pin/Cargo.toml -- $(PSOXIDE); \
+		python3 $(ROOT)/tools/bootstrap-components.py --root $(PSOXIDE) --lock $(ROOT)/components.lock.json; \
 	fi
 
 build: psoxide
@@ -59,7 +58,7 @@ disc: build
 
 # Headless render of the boot frame, so a change can be eyeballed before burning.
 render: disc
-	cd $(PSOXIDE)/emu && cargo run -p frontend --release -- launch \
+	"$(FRONTEND)" launch \
 		--path "$(CUE)" --dump-hw "$(DIST)/frame.ppm"
 	@sips -s format png "$(DIST)/frame.ppm" --out "$(DIST)/frame.png" >/dev/null 2>&1 \
 		&& echo "wrote $(DIST)/frame.png" || echo "wrote $(DIST)/frame.ppm"

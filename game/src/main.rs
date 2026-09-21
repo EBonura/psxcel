@@ -2171,11 +2171,7 @@ fn mix(a: Rgb, b: Rgb) -> Rgb {
 /// Blend `num/den` of the way from `a` to `b`. The PS1 has no cheap per-pixel
 /// alpha for flat rects, so every fade/pulse in the UI is a colour lerp against
 /// the (opaque) thing behind it.
-fn lerp(a: Rgb, b: Rgb, num: u16, den: u16) -> Rgb {
-    let (num, den) = (num.min(den) as i32, den.max(1) as i32);
-    let ch = |x: u8, y: u8| -> u8 { (x as i32 + (y as i32 - x as i32) * num / den) as u8 };
-    (ch(a.0, b.0), ch(a.1, b.1), ch(a.2, b.2))
-}
+use psx_math::color::lerp_rgb as lerp;
 
 /// "3/17" into `out`, for the menu's scroll position. Returns the length.
 fn build_frac(n: usize, total: usize, out: &mut [u8]) -> usize {

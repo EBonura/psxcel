@@ -2173,6 +2173,9 @@ fn mix(a: Rgb, b: Rgb) -> Rgb {
 /// the (opaque) thing behind it.
 use psx_math::color::lerp_rgb as lerp;
 
+#[cfg(test)]
+mod color_contract_tests;
+
 /// "3/17" into `out`, for the menu's scroll position. Returns the length.
 fn build_frac(n: usize, total: usize, out: &mut [u8]) -> usize {
     let mut o = u32_dec(out, n as u32).len();

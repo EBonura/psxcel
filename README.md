@@ -1,8 +1,8 @@
 # PSXcel
 
-Start with the [PSoXide Demo Disc](https://bonnie-studios.itch.io/psoxide-demo-disc): it includes PSXcel
-and the other Bonnie Studios PlayStation demos. Standalone downloads are available
-for testing just this project.
+**[Download the latest version on itch.io](https://bonnie-studios.itch.io/psxcel)**
+
+It's also on the [PSoXide Demo Disc](https://bonnie-studios.itch.io/psoxide-demo-disc) with the other Bonnie Studios PlayStation games, and you can [play it in your browser](https://bonnie-studios.itch.io/psoxide).
 
 **A spreadsheet that boots on a real PlayStation 1.**
 

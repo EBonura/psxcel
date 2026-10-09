@@ -27,7 +27,15 @@ help:
 	@echo "  make clean   - remove build output"
 
 # components.lock.json pins the split SDK and editor/engine sources.
-# PSOXIDE_FROM overrides them with a bootstrapped editor checkout for disc builds.
+# psoxide-components (built from the SDK's tools/psoxide-link) imports them into
+# .psoxide; an unchanged lock is verified against its receipt and not fetched
+# again. The tool is installed once per COMPONENTS_REV under target/. It is
+# pinned here rather than read from the lock because the lock's SDK revision can
+# predate the tool (the binary first exists at 4e97cf3); the tool only reads the
+# lock, so any SDK revision that has it imports the same tree.
+# PSOXIDE_FROM overrides the lock with a bootstrapped editor checkout for disc builds.
+COMPONENTS_REV := 1ecf28ae6ee9a391ea25a6f27afdb7e7278b5790
+COMPONENTS     := $(ROOT)/target/psoxide-components/$(COMPONENTS_REV)
 FRONTEND ?= frontend
 PSOXIDE_FROM ?=
 psoxide:
@@ -35,7 +43,9 @@ psoxide:
 		cargo run -q --manifest-path $(PSOXIDE_FROM)/tools/psoxide-link/Cargo.toml -- \
 			--from "$(PSOXIDE_FROM)" --into $(PSOXIDE); \
 	else \
-		python3 $(ROOT)/tools/bootstrap-components.py --root $(PSOXIDE) --lock $(ROOT)/components.lock.json; \
+		[ -x "$(COMPONENTS)/bin/psoxide-components" ] || cargo install -q --locked \
+			--git https://github.com/EBonura/PSoXide --rev $(COMPONENTS_REV) --root "$(COMPONENTS)" psoxide-link; \
+		"$(COMPONENTS)/bin/psoxide-components" --root "$(PSOXIDE)" --lock "$(ROOT)/components.lock.json"; \
 	fi
 
 build: psoxide

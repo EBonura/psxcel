@@ -1,4 +1,5 @@
 /game/target
+/target/
 /dist
 *.ppm
 .DS_Store
@@ -10,5 +11,4 @@ psoxide-pin/target/
 
 # Local dev tooling and the hydrated SDK cache: useful here, not part of the project.
 /tools/*
-!/tools/bootstrap-components.py
 /third_party/

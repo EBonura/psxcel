@@ -386,7 +386,7 @@ impl Scene for Editor {
         let font = self.font.as_ref().unwrap();
         let t = theme();
         // Publish the back buffer's VRAM row for the scissor helpers.
-        BUFFER_Y.store(ctx.fb.buffer_y(ctx.fb.drawing) as i16);
+        BUFFER_Y.store(ctx.fb.draw_origin().1 as i16);
         // Own the background so the theme can switch at runtime.
         fill(0, 0, 320, 240, t.bg);
         // The menu and chart are full-screen views; everything else draws over

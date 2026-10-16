@@ -72,7 +72,7 @@ gate: psoxide
 	rm -f "$(EXE)" "$(GATE_MAP)"
 	cd $(GAME) && PSX_LINK_MAP="$(GATE_MAP)" cargo build --release
 	@test -s "$(GATE_MAP)" || { echo "gate: no link map at $(GATE_MAP)"; exit 1; }
-	GUEST_GATE_ALLOW=int64 sh $(ROOT)/tools/guest_symbol_gate.sh "$(GATE_MAP)"
+	GUEST_GATE_ALLOW=int64 sh $(ROOT)/scripts/guest_symbol_gate.sh "$(GATE_MAP)"
 
 disc: build
 	@mkdir -p $(DIST)

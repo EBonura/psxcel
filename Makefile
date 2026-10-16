@@ -15,12 +15,13 @@ CUE      := $(DIST)/psxcel.cue
 GAMES_DIR ?= $(HOME)/Downloads/ps1 games
 GAME_NAME ?= PSXcel
 
-.PHONY: help build test disc render install release clean psoxide
+.PHONY: help build test gate disc render install release clean psoxide
 
 help:
 	@echo "PSXcel targets:"
 	@echo "  make build   - build the PSX-EXE -> $(EXE)"
 	@echo "  make test    - run the host-side unit tests (formula engine, formatting)"
+	@echo "  make gate    - link with a map and run the guest symbol gate (64-bit integer helpers allowed)"
 	@echo "  make disc    - build + pack a burnable .bin/.cue into dist/"
 	@echo "  make render  - disc + headless emulator frame dump (dist/frame.png)"
 	@echo "  make install - disc + copy into the PSoXide game library ($(GAMES_DIR))"
@@ -60,6 +61,18 @@ build: psoxide
 test: psoxide
 	cargo test --manifest-path $(GAME)/Cargo.toml \
 		--target $$(rustc -vV | sed -n 's/host: //p') -- --test-threads=1
+
+# The guest symbol gate for this build. PSXcel's cells are 64-bit by design (Manny,
+# 2026-10-16: the one exception to the no-64-bit rule), so the 64-bit INTEGER
+# helpers are allowed; soft-float, 128-bit and every other helper still fail.
+# Only a fresh link writes the map, so the executable is removed first.
+GATE_MAP := $(DIST)/psxcel.map
+gate: psoxide
+	@mkdir -p $(DIST)
+	rm -f "$(EXE)" "$(GATE_MAP)"
+	cd $(GAME) && PSX_LINK_MAP="$(GATE_MAP)" cargo build --release
+	@test -s "$(GATE_MAP)" || { echo "gate: no link map at $(GATE_MAP)"; exit 1; }
+	GUEST_GATE_ALLOW=int64 sh $(ROOT)/tools/guest_symbol_gate.sh "$(GATE_MAP)"
 
 disc: build
 	@mkdir -p $(DIST)

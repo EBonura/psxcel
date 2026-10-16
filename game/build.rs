@@ -20,4 +20,9 @@ fn main() {
     println!("cargo:rustc-link-arg=-T{}", ld.display());
     println!("cargo:rustc-link-arg=--oformat=binary");
     println!("cargo:rerun-if-changed={}", ld.display());
+    // Optional linker map for `make gate`; link-only, the image is unchanged.
+    println!("cargo:rerun-if-env-changed=PSX_LINK_MAP");
+    if let Some(map) = std::env::var_os("PSX_LINK_MAP").filter(|path| !path.is_empty()) {
+        println!("cargo:rustc-link-arg=-Map={}", PathBuf::from(map).display());
+    }
 }

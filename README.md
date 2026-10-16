@@ -149,6 +149,7 @@ cd psxcel
 
 make build     # -> a PSX-EXE
 make test      # host-side unit tests (formula engine, formatting, editor logic)
+make gate      # link map + guest symbol gate (64-bit integer helpers allowed, nothing else)
 make disc      # -> a burnable .bin/.cue in dist/
 make render    # headless emulator frame dump -> dist/frame.png
 make install   # copy into the ~/Downloads/ps1 games library

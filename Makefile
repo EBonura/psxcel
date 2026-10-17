@@ -49,8 +49,14 @@ psoxide:
 		"$(COMPONENTS)/bin/psoxide-components" --root "$(PSOXIDE)" --lock "$(ROOT)/components.lock.json"; \
 	fi
 
+# A panic is a BREAK at the faulting instruction (-Cpanic=immediate-abort): core::fmt, the panic Location records and
+# their file names stay out of the image, and psx-rt's exception handler records Cause/EPC/BadVAddr
+# (__psx_rt_fault_*; `psoxide-size faults` reads them from a RAM dump). PSOXIDE_PANIC_MESSAGES=1 restores the
+# formatted panic. `--config` appends to the rustflags in the game's .cargo/config.toml.
+PANIC_CONFIG = $(if $(filter-out 0,$(PSOXIDE_PANIC_MESSAGES)),,--config 'target.mipsel-sony-psx.rustflags=["-Zunstable-options","-Cpanic=immediate-abort"]')
+
 build: psoxide
-	cd $(GAME) && cargo build --release
+	cd $(GAME) && cargo build --release $(PANIC_CONFIG)
 
 # Host-side unit tests (the sheet.rs evaluator/formatter suite). Run from the
 # repo root so game/.cargo/config.toml does not apply: its build-std core
@@ -70,7 +76,7 @@ GATE_MAP := $(DIST)/psxcel.map
 gate: psoxide
 	@mkdir -p $(DIST)
 	rm -f "$(EXE)" "$(GATE_MAP)"
-	cd $(GAME) && PSX_LINK_MAP="$(GATE_MAP)" cargo build --release
+	cd $(GAME) && PSX_LINK_MAP="$(GATE_MAP)" cargo build --release $(PANIC_CONFIG)
 	@test -s "$(GATE_MAP)" || { echo "gate: no link map at $(GATE_MAP)"; exit 1; }
 	GUEST_GATE_ALLOW=int64 sh $(PSOXIDE)/tools/guest_symbol_gate.sh "$(GATE_MAP)"
 

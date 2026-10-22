@@ -32,7 +32,8 @@ mod sheet;
 mod theme;
 
 use psx_engine::{button, App, Config, Ctx, Scene};
-use psx_font::{fonts::SPLEEN_5X8, FontAtlas};
+use psx_font::fonts::SPLEEN_5X8;
+use psx_font::FontAtlas;
 use psx_gpu::{draw_line_mono, draw_quad_flat, draw_rect_flat, draw_tri_flat};
 use psx_math::fmt::u32_dec;
 use psx_math::sincos::{cos_q12, sin_q12};
@@ -2213,7 +2214,7 @@ fn focus_ok() -> Keyboard {
 
 /// A point on a circle of radius `r` about `(cx, cy)` at `angle_q12` (Q0.12).
 fn pie_point(cx: i16, cy: i16, r: i16, angle_q12: u32) -> (i16, i16) {
-    let a = (angle_q12 & 0x0FFF) as u16;
+    let a = (angle_q12 & 0x0fff) as u16;
     let x = cx + ((cos_q12(a) * r as i32) / 4096) as i16;
     let y = cy + ((sin_q12(a) * r as i32) / 4096) as i16;
     (x, y)

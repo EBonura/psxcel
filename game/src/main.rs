@@ -38,14 +38,14 @@ use psx_gpu::{draw_line_mono, draw_quad_flat, draw_rect_flat, draw_tri_flat};
 use psx_math::fmt::u32_dec;
 use psx_math::sincos::{cos_q12, sin_q12};
 use psx_mc::{Card, Entry, Error as McError, HardwareCard, Slot};
-use psx_osk::{Action, Dir, Keyboard};
+use psx_osk::{Action, Direction, Keyboard};
 use psx_pad::PadTracker;
-use psx_vram::{Clut, TexDepth, Tpage};
+use psx_vram::{Clut, TextureDepth, TexturePage};
 use theme::{theme, Rgb};
 
 use sheet::{fmt_value, fmt_value_fit, idx, Kind, Sheet, COLS, ROWS};
 
-const FONT_TPAGE: Tpage = Tpage::new(320, 0, TexDepth::Bit4);
+const FONT_TPAGE: TexturePage = TexturePage::new(320, 0, TextureDepth::Bit4);
 const FONT_CLUT: Clut = Clut::new(320, 256);
 
 // Layout (320x240, Spleen 5x8 font: 5px advance, 8px tall).
@@ -66,7 +66,7 @@ const VIS_ROWS: usize = 24;
 const GRID_TOP: i16 = GRID_Y0 - 1;
 const GRID_Y1: i16 = GRID_TOP + (VIS_ROWS as i16) * ROW_H - 1;
 /// The same, for when the on-screen keyboard is covering the lower screen.
-const KBD_GRID_Y1: i16 = GRID_TOP + ((psx_osk::Y0 - 14 - GRID_TOP) / ROW_H) * ROW_H - 1;
+const KBD_GRID_Y1: i16 = GRID_TOP + ((psx_osk::PANEL_TOP - GRID_TOP) / ROW_H) * ROW_H - 1;
 
 /// Control hint on the on-screen keyboard's panel (Edit mode).
 const KBD_HINT: &str = "X:Key L2+<>:Caret SQ:Del R2:OK R1:Cell O:Back";
@@ -110,7 +110,7 @@ static mut COMP_SCRATCH: [u8; 8192] = [0; 8192];
 
 /// A zeroed directory entry, for the browse-list array.
 const EMPTY_ENTRY: Entry = Entry {
-    name: [0u8; psx_mc::MAX_NAME + 1],
+    name: [0u8; psx_mc::MAX_NAME_LEN + 1],
     name_len: 0,
     blocks: 0,
 };
@@ -1368,10 +1368,10 @@ impl Editor {
             }
         } else {
             let dirs = [
-                (button::LEFT, Dir::Left),
-                (button::RIGHT, Dir::Right),
-                (button::UP, Dir::Up),
-                (button::DOWN, Dir::Down),
+                (button::LEFT, Direction::Left),
+                (button::RIGHT, Direction::Right),
+                (button::UP, Direction::Up),
+                (button::DOWN, Direction::Down),
             ];
             for &(btn, dir) in dirs.iter() {
                 if self.stepped(btn) {
@@ -2204,10 +2204,10 @@ fn build_frac(n: usize, total: usize, out: &mut [u8]) -> usize {
 fn focus_ok() -> Keyboard {
     let mut kbd = Keyboard::new();
     for _ in 0..3 {
-        kbd.step(Dir::Down);
+        kbd.step(Direction::Down);
     }
     for _ in 0..4 {
-        kbd.step(Dir::Right);
+        kbd.step(Direction::Right);
     }
     kbd
 }

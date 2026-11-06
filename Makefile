@@ -35,7 +35,7 @@ help:
 # predate the tool (the binary first exists at e6ec267); the tool only reads the
 # lock, so any SDK revision that has it imports the same tree.
 # PSOXIDE_FROM overrides the lock with a bootstrapped editor checkout for disc builds.
-COMPONENTS_REV := b5365b1863fd0d3081602e65f3cfe49826d4e99e
+COMPONENTS_REV := c75f63928b069e0d25408b6bf3be85e27f7e27c2
 COMPONENTS     := $(ROOT)/target/psoxide-components/$(COMPONENTS_REV)
 FRONTEND ?= frontend
 PSOXIDE_FROM ?=

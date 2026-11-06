@@ -2618,6 +2618,8 @@ fn main() -> ! {
         chart_kind: ChartKind::Bar,
         pad: PadTracker::new(),
     };
+    // The SDK caps presentation at 30 fps by default; PSXcel keeps presenting every VBlank.
+    psx_rt::interrupts::set_min_flip_vblanks(1);
     let config = Config {
         clear_color: (8, 10, 18),
         ..Config::default()

@@ -156,8 +156,8 @@ make install   # copy into the ~/Downloads/ps1 games library
 ```
 
 The current [SDK](https://github.com/EBonura/PSoXide) and
-[engine](https://github.com/EBonura/PSoXide-editor) live in separate repositories.
-For integration builds, `PSOXIDE_FROM=/path/to/PSoXide-editor` accepts a
+[engine](https://github.com/EBonura/PSoXide/tree/main/engine) (part of the SDK repository) live in separate repositories.
+For integration builds, `PSOXIDE_FROM=/path/to/PSoXide` accepts a
 bootstrapped editor checkout. Keep the resulting BIN/CUE files together and
 open the CUE in the separate
 [PSoXide emulator](https://github.com/EBonura/PSoXide-emulator). The legacy

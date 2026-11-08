@@ -15,7 +15,7 @@ CUE      := $(DIST)/psxcel.cue
 GAMES_DIR ?= $(HOME)/Downloads/ps1 games
 GAME_NAME ?= PSXcel
 
-.PHONY: help build test gate disc render install release clean psoxide
+.PHONY: help build test gate disc render install release clean psoxide repro-rustc
 
 help:
 	@echo "PSXcel targets:"
@@ -55,8 +55,15 @@ psoxide:
 # formatted panic. `--config` appends to the rustflags in the game's .cargo/config.toml.
 PANIC_CONFIG = $(if $(filter-out 0,$(PSOXIDE_PANIC_MESSAGES)),,--config 'target.mipsel-sony-psx.rustflags=["-Zunstable-options","-Cpanic=immediate-abort"]')
 
-build: psoxide
-	cd $(GAME) && cargo build --release $(PANIC_CONFIG)
+# Guest builds run under the SDK's psoxide-rustc, so the checkout directory does not reach the
+# crate hashes: the same commit gives the same executable from any directory.
+REPRO_RUSTC := $(PSOXIDE)/target/release/psoxide-rustc
+REPRO := RUSTC_WRAPPER=$(REPRO_RUSTC) PSOXIDE_REPRO_ROOT=$(ROOT)
+repro-rustc: psoxide
+	cargo build -q --release --locked --manifest-path $(PSOXIDE)/Cargo.toml -p psoxide-pgo --bin psoxide-rustc
+
+build: repro-rustc
+	cd $(GAME) && $(REPRO) cargo build --release $(PANIC_CONFIG)
 
 # Host-side unit tests (the sheet.rs evaluator/formatter suite). Run from the
 # repo root so game/.cargo/config.toml does not apply: its build-std core
@@ -73,10 +80,10 @@ test: psoxide
 # helpers are allowed; soft-float, 128-bit and every other helper still fail.
 # Only a fresh link writes the map, so the executable is removed first.
 GATE_MAP := $(DIST)/psxcel.map
-gate: psoxide
+gate: repro-rustc
 	@mkdir -p $(DIST)
 	rm -f "$(EXE)" "$(GATE_MAP)"
-	cd $(GAME) && PSX_LINK_MAP="$(GATE_MAP)" cargo build --release $(PANIC_CONFIG)
+	cd $(GAME) && $(REPRO) PSX_LINK_MAP="$(GATE_MAP)" cargo build --release $(PANIC_CONFIG)
 	@test -s "$(GATE_MAP)" || { echo "gate: no link map at $(GATE_MAP)"; exit 1; }
 	GUEST_GATE_ALLOW=int64 sh $(PSOXIDE)/tools/guest_symbol_gate.sh "$(GATE_MAP)"
 

@@ -3,3 +3,4 @@
 id psxcel
 front psxcel-chart.png
 back psxcel-chart.png psxcel-editing.png
+shots psxcel-chart.png psxcel-editing.png

@@ -1,0 +1,28 @@
+# This program's exceptions to the SDK's architecture gate (`psx-gate`, the SDK's
+# sdk/docs/GATE.md). A ratchet: nothing is added, an entry that no longer matches the tree
+# fails (delete it), a count only goes down. `remove` is a short tag: a workstream (W3),
+# `unscheduled` or `decision`.
+
+# One deprecated SDK call in main.rs (the presentation cap's old name).
+[[exception]]
+program = "psxcel"
+kind = "deprecated-use"
+item = "game/src/main.rs"
+count = 1
+remove = "unscheduled"
+
+# Memory-card saves are compressed with psx-mc's `compress` feature; the saves on existing cards
+# depend on it.
+[[exception]]
+program = "psxcel"
+kind = "feature"
+item = "psx-mc/compress"
+remove = "decision"
+
+# Built by plain cargo (make build), not psoxide-pgo apply, so the executable has no receipt;
+# `make disc` passes this file to mkisopsx.
+[[exception]]
+program = "psxcel"
+kind = "no-receipt"
+item = "-"
+remove = "unscheduled"

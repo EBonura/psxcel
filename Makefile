@@ -90,7 +90,8 @@ gate: repro-rustc
 disc: build
 	@mkdir -p $(DIST)
 	cd $(MKISOPSX) && cargo run --release -- \
-		--exe "$(EXE)" --out "$(BIN)" --volume PSXCEL
+		--exe "$(EXE)" --out "$(BIN)" --volume PSXCEL \
+		--gate-file "$(ROOT)/psx-gate.toml"
 
 # Headless render of the boot frame, so a change can be eyeballed before burning.
 render: disc

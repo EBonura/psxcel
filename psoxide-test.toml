@@ -31,6 +31,11 @@ map = "psxcel.map"
 layout = false
 layout_reason = "plain cargo build (psx-gate.toml no-receipt): no psoxide-pgo layout or profile exists"
 
+# Size bar: text may not grow and free RAM may not fall (tolerance 0), against the baseline blessed on the
+# repinned build. Reason: that build is already smaller than the one installed in the library (50db82e on
+# SDK d442e2b64): text -17,772 bytes (the previous lane's measurement of both builds), so a bar at the new
+# figures can only be tighter than the installed one, and a zero tolerance leaves no room to give back the
+# saving. The journey-state block is not in this build.
 [[size]]
 build = "ship"
 
@@ -71,6 +76,18 @@ compare = ["psxcel.bin", "psxcel.cue", "psxcel.exe"]
 build = "ship"
 name = "PSXcel"
 
+# Speed bar: the blessed spread of the window below, as the harness measures it. Reason and a limit, both
+# found on 2026-11-21 by measuring the installed disc (50db82e) and this build on the same tape window
+# (`psoxide-pgo measure`, polls 250..1250): both present every frame in one vblank (1:999), and both spin
+# for the rest of the frame (issue cycles per frame in the menu are 380,000 in each, from
+# --cpu-cycle-profile-log). The work figure is the frame minus the spin loops the classifier recognises;
+# it recognised the installed build's vblank wait (74.35% of instructions, work_per_frame 172,484) but
+# does not recognise the one in this build (psx-engine's inlined `wait_present_vblank` inside
+# `App::run_scheduled`, about 67% of instructions), so work_per_frame here (548,948) is the whole frame
+# and cannot show a slowdown until a frame misses its vblank. What this bar therefore guards is the
+# vblank histogram (every frame in one vblank) and the p99 frame, not the work figure. [[speed]] has no
+# key that passes `psoxide-pgo measure --wait-range`, which is what would name the loop.
+#
 # One window on the poll-bound tape pgo/nav-edit.pxtape (`psoxide-test tape --pad digital`, the schedule in
 # pgo/README.txt): Budget sample opened from the start menu, the cursor walked about the grid with an L2
 # page jump down and back, the on-screen keyboard opened and walked, closed again. Polls 250..1250 cover

@@ -45,6 +45,13 @@ precheck = ["smoke-boot-nav"]
 
 [cross]
 smoke = ["tests/smoke-boot-nav.toml"]
+# Fewest distinct pictures a run must present (the check that tells a hang from a program at rest).
+# The default 60 is for programs that animate. PSXcel's start menu and its grid are still until a
+# button moves them: PCSX-ReARMed presents 2 distinct pictures in 3000 idle frames (black, then the
+# menu) and 12 across the smoke's cursor moves. Two is what a program that booted and drew its menu
+# shows; the smoke's own state checkpoints (mode, cursor, cell value on every emulator) are what
+# catch a hang after that.
+min_distinct = 2
 # The shipping disc has no state block: it must boot and present with no input on every emulator.
 boot = { build = "ship", frames = 3000 }
 

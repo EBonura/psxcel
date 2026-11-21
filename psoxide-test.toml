@@ -1,0 +1,83 @@
+# PSXcel's test description for psoxide-test (the SDK's harness, tools/psoxide-test). It declares
+# what to build and check; the harness decides how. Baseline: psoxide-test.baseline.toml.
+schema = 1
+name = "PSXcel"
+repository = "EBonura/psxcel"
+
+# The shipping disc (what the library gets): no journey state compiled in. `make linked` links
+# with the map and packs the disc into {out}.
+[[build]]
+name = "ship"
+out = "build/ship"
+commands = [["make", "linked", "OUT_DIR={out}"]]
+collect = { "psxcel.exe" = "game/target/mipsel-sony-psx/release/psxcel.exe" }
+disc = "psxcel.cue"
+map = "psxcel.map"
+# PSXcel is built by plain cargo, not psoxide-pgo apply (the `no-receipt` entry of psx-gate.toml),
+# so there is no placement layout or sample profile to bind.
+layout = false
+layout_reason = "plain cargo build (psx-gate.toml no-receipt): no psoxide-pgo layout or profile exists"
+
+# The journeys' disc: the same program with the editor's read-only observation (cargo feature
+# journey-state, PSXCEL_JOURNEY in its map). Built second: it overwrites the cargo target of the
+# shipping exe, whose copy is already in build/ship.
+[[build]]
+name = "journey"
+out = "build/journey"
+commands = [["make", "linked", "FEATURES=journey-state", "OUT_DIR={out}"]]
+collect = { "psxcel.exe" = "game/target/mipsel-sony-psx/release/psxcel.exe" }
+disc = "psxcel.cue"
+map = "psxcel.map"
+layout = false
+layout_reason = "plain cargo build (psx-gate.toml no-receipt): no psoxide-pgo layout or profile exists"
+
+[[size]]
+build = "ship"
+
+[journeys]
+files = "tests/*.toml"
+precheck = ["smoke-boot-nav"]
+
+[cross]
+smoke = ["tests/smoke-boot-nav.toml"]
+# The shipping disc has no state block: it must boot and present with no input on every emulator.
+boot = { build = "ship", frames = 3000 }
+
+# The formula engine and number formatter (29 tests). One thread: recalc's scratch lives in statics.
+[[host]]
+name = "host-tests"
+command = ["make", "test"]
+
+# The guest symbol gate on the shipping link's map. PSXcel's cells are 64-bit by design (Manny,
+# 2026-10-16: the one exception to the no-64-bit rule), so the 64-bit INTEGER helpers are
+# allowed; soft-float, 128-bit and every other helper still fail.
+[[host]]
+name = "symbol-gate"
+build = "ship"
+command = ["sh", ".psoxide/tools/guest_symbol_gate.sh", "{out}/psxcel.map"]
+env = { GUEST_GATE_ALLOW = "int64" }
+
+# Load-delay hazards in guest asm (fleet rule since SDK 580daa02), with the pin's own scanner.
+[[host]]
+name = "check-mfc0"
+command = ["cargo", "run", "-q", "--release", "--locked", "--manifest-path", ".psoxide/tools/psoxide-hazard/Cargo.toml", "--bin", "check-mfc0", "--", "game"]
+
+[[clean]]
+build = "ship"
+seed = [".psoxide"]
+compare = ["psxcel.bin", "psxcel.cue", "psxcel.exe"]
+
+[[install]]
+build = "ship"
+name = "PSXcel"
+
+# One window on the poll-bound tape pgo/nav-edit.pxtape (`psoxide-test tape --pad digital`, the schedule in
+# pgo/README.txt): Budget sample opened from the start menu, the cursor walked about the grid with an L2
+# page jump down and back, the on-screen keyboard opened and walked, closed again. Polls 250..1250 cover
+# the grid scrolling and the keyboard panel, the two draws that cost the most.
+[[speed]]
+name = "nav-edit"
+build = "ship"
+tape = "pgo/nav-edit.pxtape"
+polls = [250, 1250]
+offsets = [-48, -36, -24, -12, 0, 12, 24, 36]

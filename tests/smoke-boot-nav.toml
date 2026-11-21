@@ -1,0 +1,100 @@
+# Cross-emulator smoke (psoxide-test [cross]): the journey disc boots to the start menu, opens the
+# Budget sample, moves the cursor to D2 and sees the formula's result. Closed loop only: every
+# press is held until PSXcel's own state says it took, every wait ends on state, every checkpoint
+# reads RAM. PSXCEL_JOURNEY words (see game/src/main.rs): +8 visual frame, +12 mode (0 menu,
+# 1 nav, 2 edit), +16 menu selection, +20 column, +24 row, +40 cursor cell kind (1 number),
+# +44 value low word (fixed point, four decimals), +48 high word, +56 published.
+name = "psxcel-smoke-boot-nav"
+title = "PSXcel smoke: boots to the menu, opens Budget, moves to D2 and shows B2*C2"
+disc = "build/journey/psxcel.cue"
+symbols = "build/journey/psxcel.map"
+pad = "digital"
+
+[[step]]
+wait_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 8, op = "ge", value = 30 }
+timeout = 900
+
+[[step]]
+checkpoint = "menu"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 56
+value = 1
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 12
+value = 0
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 16
+value = 0
+
+[[step]]
+press = ["down"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 16, op = "eq", value = 1 }
+timeout = 300
+
+[[step]]
+press = ["cross"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 12, op = "eq", value = 1 }
+timeout = 300
+
+[[step]]
+press = ["right"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 20, op = "eq", value = 1 }
+timeout = 300
+
+[[step]]
+press = ["right"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 20, op = "eq", value = 2 }
+timeout = 300
+
+[[step]]
+press = ["right"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 20, op = "eq", value = 3 }
+timeout = 300
+
+[[step]]
+press = ["down"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 24, op = "eq", value = 1 }
+timeout = 300
+
+[[step]]
+checkpoint = "d2"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 12
+value = 1
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 20
+value = 3
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 24
+value = 1
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 40
+value = 1
+note = "a number"
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 44
+value = 45000
+note = "B2*C2 = 3 * 1.50 = 4.5000"
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 48
+value = 0

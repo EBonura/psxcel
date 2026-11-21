@@ -1,0 +1,181 @@
+# Budget sample: the cursor reads text, numbers and formulas where it stands. Walks A1 (text),
+# D2 (B2*C2), D3, D4 and D6 (SUM(D2:D4)), then pages down with L2. Every press is held until
+# PSXcel's own cursor says it took (a poll-synchronous hold: judged once per pad poll).
+# PSXCEL_JOURNEY: +12 mode (1 nav), +20 column, +24 row, +40 cell kind (1 number, 2 text),
+# +44 value low word (four decimals), +52 raw length.
+name = "psxcel-nav-cursor"
+title = "PSXcel: the cursor reads text, numbers and formula results across the Budget sheet"
+disc = "build/journey/psxcel.cue"
+symbols = "build/journey/psxcel.map"
+pad = "digital"
+max_ticks = 4000
+
+[[step]]
+label = "the menu is up"
+wait_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 8, op = "ge", value = 30 }
+timeout = 900
+
+[[step]]
+label = "Budget"
+sync = "poll"
+press = ["down"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 16, op = "eq", value = 1 }
+timeout = 300
+
+[[step]]
+label = "open it"
+sync = "poll"
+press = ["cross"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 12, op = "eq", value = 1 }
+timeout = 300
+
+[[step]]
+checkpoint = "a1-text"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 40
+value = 2
+note = "ITEM is text"
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 52
+value = 4
+note = "four characters"
+
+[[step]]
+sync = "poll"
+press = ["down"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 24, op = "eq", value = 1 }
+timeout = 300
+
+[[step]]
+sync = "poll"
+press = ["right"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 20, op = "eq", value = 1 }
+timeout = 300
+
+[[step]]
+sync = "poll"
+press = ["right"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 20, op = "eq", value = 2 }
+timeout = 300
+
+[[step]]
+sync = "poll"
+press = ["right"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 20, op = "eq", value = 3 }
+timeout = 300
+
+[[step]]
+checkpoint = "d2"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 40
+value = 1
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 44
+value = 45000
+note = "3 * 1.50"
+
+[[step]]
+sync = "poll"
+press = ["down"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 24, op = "eq", value = 2 }
+timeout = 300
+
+[[step]]
+checkpoint = "d3"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 44
+value = 45000
+note = "2 * 2.25"
+
+[[step]]
+sync = "poll"
+press = ["down"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 24, op = "eq", value = 3 }
+timeout = 300
+
+[[step]]
+checkpoint = "d4"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 44
+value = 12000
+note = "1 * 1.20"
+
+[[step]]
+sync = "poll"
+press = ["down"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 24, op = "eq", value = 4 }
+timeout = 300
+
+[[step]]
+checkpoint = "d5-empty"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 40
+value = 0
+note = "row 5 is blank"
+
+[[step]]
+sync = "poll"
+press = ["down"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 24, op = "eq", value = 5 }
+timeout = 300
+
+[[step]]
+checkpoint = "d6-sum"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 40
+value = 1
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 44
+value = 102000
+note = "SUM(D2:D4) = 4.5 + 4.5 + 1.2"
+
+[[step]]
+label = "L2 + Down pages the cursor a screen at a time (24 rows)"
+sync = "poll"
+press = ["l2", "down"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 24, op = "eq", value = 29 }
+timeout = 300
+
+[[step]]
+checkpoint = "paged"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 12
+value = 1
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 20
+value = 3
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 40
+value = 0
+note = "nothing down there"

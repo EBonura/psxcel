@@ -15,7 +15,7 @@ CUE      := $(DIST)/psxcel.cue
 GAMES_DIR ?= $(HOME)/Downloads/ps1 games
 GAME_NAME ?= PSXcel
 
-.PHONY: help build test gate disc render install release clean psoxide repro-rustc
+.PHONY: help build test gate disc render install release clean psoxide repro-rustc linked
 
 help:
 	@echo "PSXcel targets:"
@@ -62,8 +62,13 @@ REPRO := RUSTC_WRAPPER=$(REPRO_RUSTC) PSOXIDE_REPRO_ROOT=$(ROOT)
 repro-rustc: psoxide
 	cargo build -q --release --locked --manifest-path $(PSOXIDE)/Cargo.toml -p psoxide-pgo --bin psoxide-rustc
 
+# FEATURES: cargo features of the game crate (`journey-state` is the test disc's read-only
+# observation; the shipping build has none).
+FEATURES ?=
+FEATURE_FLAGS = $(if $(strip $(FEATURES)),--features $(strip $(FEATURES)))
+
 build: repro-rustc
-	cd $(GAME) && $(REPRO) cargo build --release $(PANIC_CONFIG)
+	cd $(GAME) && $(REPRO) cargo build --release $(PANIC_CONFIG) $(FEATURE_FLAGS)
 
 # Host-side unit tests (the sheet.rs evaluator/formatter suite). Run from the
 # repo root so game/.cargo/config.toml does not apply: its build-std core
@@ -86,6 +91,23 @@ gate: repro-rustc
 	cd $(GAME) && $(REPRO) PSX_LINK_MAP="$(GATE_MAP)" cargo build --release $(PANIC_CONFIG)
 	@test -s "$(GATE_MAP)" || { echo "gate: no link map at $(GATE_MAP)"; exit 1; }
 	GUEST_GATE_ALLOW=int64 sh $(PSOXIDE)/tools/guest_symbol_gate.sh "$(GATE_MAP)"
+
+# A fresh link that writes its map next to the disc: dist/psxcel.{bin,cue,map} by default. The harness's
+# two builds (psoxide-test.toml) are `make linked OUT_DIR=...` with and without FEATURES=journey-state,
+# the second being the journeys' disc (the editor's read-only observation, PSXCEL_JOURNEY in the map).
+# Only a fresh link writes the map, so the executable is removed and the crate cleaned first (cargo
+# otherwise re-uses an earlier link of the same features without writing it). The map is link-only:
+# the executable is byte-identical to `make build`'s.
+OUT_DIR ?= $(DIST)
+linked: repro-rustc
+	@mkdir -p "$(OUT_DIR)"
+	rm -f "$(EXE)" "$(OUT_DIR)/psxcel.map"
+	cd $(GAME) && cargo clean -q --release --target $(TARGET) -p psxcel
+	cd $(GAME) && $(REPRO) PSX_LINK_MAP="$(OUT_DIR)/psxcel.map" cargo build --release $(PANIC_CONFIG) $(FEATURE_FLAGS)
+	@test -s "$(OUT_DIR)/psxcel.map" || { echo "linked: no link map at $(OUT_DIR)/psxcel.map"; exit 1; }
+	cd $(MKISOPSX) && cargo run --release -- \
+		--exe "$(EXE)" --out "$(OUT_DIR)/psxcel.bin" --volume PSXCEL \
+		--gate-file "$(ROOT)/psx-gate.toml"
 
 disc: build
 	@mkdir -p $(DIST)

@@ -1,0 +1,397 @@
+# Enter a value and a formula on a blank sheet, with the on-screen keyboard, and see the result.
+# Types 21 into A1, then =A1*2 into A2 (symbols page, then the point-at-a-cell mode for the
+# reference), and reads the cursor cell: 21.0000 in A1, 42.0000 in A2. The keyboard's highlight is
+# not observable, so each move is one press held for one pad poll with one poll of rest (judged on
+# the game's own polls, not on time); every key that types is held until the edit buffer shows it.
+# PSXCEL_JOURNEY: +12 mode (1 nav, 2 edit, 3 pick), +20 column, +24 row, +28 edit length,
+# +32 edit bytes 0..4, +36 edit bytes 4..8 (little endian), +40 cell kind (1 number), +44 value
+# low word (four decimals), +52 raw length.
+name = "psxcel-enter-value-formula"
+title = "PSXcel: type 21 and =A1*2 with the keyboard, read 21 and 42"
+disc = "build/journey/psxcel.cue"
+symbols = "build/journey/psxcel.map"
+pad = "digital"
+max_ticks = 6000
+
+[[step]]
+label = "the menu is up"
+wait_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 8, op = "ge", value = 30 }
+timeout = 900
+
+[[step]]
+label = "open Blank"
+sync = "poll"
+press = ["cross"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 12, op = "eq", value = 1 }
+timeout = 300
+
+[[step]]
+checkpoint = "blank-a1"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 40
+value = 0
+note = "A1 is empty"
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 20
+value = 0
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 24
+value = 0
+
+[[step]]
+label = "edit A1"
+sync = "poll"
+press = ["cross"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 12, op = "eq", value = 2 }
+timeout = 300
+
+[[step]]
+checkpoint = "editing-a1"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 28
+value = 0
+note = "nothing typed yet"
+
+[[step]]
+sync = "poll"
+press = ["up"]
+hold = 1
+wait = 1
+
+[[step]]
+sync = "poll"
+press = ["right"]
+hold = 1
+wait = 1
+
+[[step]]
+label = "type 2"
+sync = "poll"
+press = ["cross"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 28, op = "eq", value = 1 }
+timeout = 300
+
+[[step]]
+checkpoint = "typed-2"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 32
+value = 50
+note = "2"
+
+[[step]]
+sync = "poll"
+press = ["left"]
+hold = 1
+wait = 1
+
+[[step]]
+label = "type 1"
+sync = "poll"
+press = ["cross"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 28, op = "eq", value = 2 }
+timeout = 300
+
+[[step]]
+checkpoint = "typed-21"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 32
+value = 12594
+note = "21"
+
+[[step]]
+label = "commit"
+sync = "poll"
+press = ["start"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 12, op = "eq", value = 1 }
+timeout = 300
+
+[[step]]
+checkpoint = "a1-is-21"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 40
+value = 1
+note = "a number"
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 44
+value = 210000
+note = "21.0000"
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 52
+value = 2
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 20
+value = 0
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 24
+value = 0
+
+[[step]]
+label = "down to A2"
+sync = "poll"
+press = ["down"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 24, op = "eq", value = 1 }
+timeout = 300
+
+[[step]]
+label = "edit A2"
+sync = "poll"
+press = ["cross"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 12, op = "eq", value = 2 }
+timeout = 300
+
+[[step]]
+checkpoint = "editing-a2"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 28
+value = 0
+note = "the cell was empty"
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 24
+value = 1
+
+[[step]]
+sync = "poll"
+press = ["down"]
+hold = 1
+wait = 1
+
+[[step]]
+sync = "poll"
+press = ["down"]
+hold = 1
+wait = 1
+
+[[step]]
+sync = "poll"
+press = ["down"]
+hold = 1
+wait = 1
+
+[[step]]
+sync = "poll"
+press = ["right"]
+hold = 1
+wait = 1
+
+[[step]]
+sync = "poll"
+press = ["cross"]
+hold = 1
+wait = 1
+
+[[step]]
+sync = "poll"
+press = ["up"]
+hold = 1
+wait = 1
+
+[[step]]
+sync = "poll"
+press = ["up"]
+hold = 1
+wait = 1
+
+[[step]]
+sync = "poll"
+press = ["up"]
+hold = 1
+wait = 1
+
+[[step]]
+sync = "poll"
+press = ["right"]
+hold = 1
+wait = 1
+
+[[step]]
+sync = "poll"
+press = ["right"]
+hold = 1
+wait = 1
+
+[[step]]
+label = "type ="
+sync = "poll"
+press = ["cross"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 28, op = "eq", value = 1 }
+timeout = 300
+
+[[step]]
+checkpoint = "typed-equals"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 32
+value = 61
+note = "="
+
+[[step]]
+label = "point at a cell"
+sync = "poll"
+press = ["r1"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 12, op = "eq", value = 3 }
+timeout = 300
+
+[[step]]
+sync = "poll"
+press = ["up"]
+hold = 1
+wait = 1
+
+[[step]]
+label = "insert A1"
+sync = "poll"
+press = ["cross"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 12, op = "eq", value = 2 }
+timeout = 300
+
+[[step]]
+checkpoint = "typed-a1"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 28
+value = 3
+note = "=A1"
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 32
+value = 3227965
+note = "=A1"
+
+[[step]]
+sync = "poll"
+press = ["left"]
+hold = 1
+wait = 1
+
+[[step]]
+sync = "poll"
+press = ["left"]
+hold = 1
+wait = 1
+
+[[step]]
+label = "type *"
+sync = "poll"
+press = ["cross"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 28, op = "eq", value = 4 }
+timeout = 300
+
+[[step]]
+checkpoint = "typed-star"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 32
+value = 707871037
+note = "=A1*"
+
+[[step]]
+sync = "poll"
+press = ["up"]
+hold = 1
+wait = 1
+
+[[step]]
+sync = "poll"
+press = ["left"]
+hold = 1
+wait = 1
+
+[[step]]
+label = "type 2"
+sync = "poll"
+press = ["cross"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 28, op = "eq", value = 5 }
+timeout = 300
+
+[[step]]
+checkpoint = "typed-formula"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 32
+value = 707871037
+note = "=A1*"
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 36
+value = 50
+note = "2"
+
+[[step]]
+label = "commit"
+sync = "poll"
+press = ["start"]
+hold_until = { kind = "ram", sym = "PSXCEL_JOURNEY", offset = 12, op = "eq", value = 1 }
+timeout = 300
+
+[[step]]
+checkpoint = "a2-is-42"
+golden = false
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 40
+value = 1
+note = "a number"
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 44
+value = 420000
+note = "=A1*2 shows 42.0000"
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 52
+value = 5
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 20
+value = 0
+[[step.assert]]
+kind = "ram"
+sym = "PSXCEL_JOURNEY"
+offset = 24
+value = 1

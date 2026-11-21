@@ -15,6 +15,10 @@ edition = "2021"
 name = "psxcel"
 path = "src/main.rs"
 
+# A read-only observation of the editor for psoxide-test's journeys; never in the shipping disc.
+[features]
+journey-state = []
+
 [profile.release]
 # Keep absolute host paths out of the shipped binary. rustc records the
 # source path of every panic/assert site (core::panic::Location) as a

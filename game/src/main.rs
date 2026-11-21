@@ -354,6 +354,76 @@ fn sheet() -> &'static mut Sheet {
     unsafe { &mut *core::ptr::addr_of_mut!(SHEET) }
 }
 
+// -- Journey state ---------------------------------------------------------
+//
+// Built only for the test disc (`make journey-disc`, cargo feature `journey-state`); the shipping
+// disc has none of it. A read-only observation of the editor for psoxide-test's journeys: the
+// program never reads it back, and nothing in it changes what the editor does. All fields are
+// 32-bit words at these byte offsets of `PSXCEL_JOURNEY`:
+//    0 version (1)               4 sequence (publications)    8 visual frame
+//   12 mode (Mode order below)  16 start-menu selection      20 cursor column   24 cursor row
+//   28 edit buffer length       32 edit buffer bytes 0..4    36 edit buffer bytes 4..8
+//   40 cursor cell kind (0 empty, 1 number, 2 text, 3 error)
+//   44 cursor cell value, low word  48 high word (fixed point, 4 decimals, two's complement)
+//   52 cursor cell raw length   56 published (1 once every field above is written)
+// Mode order: 0 Menu, 1 Nav, 2 Edit, 3 Pick, 4 Chart, 5 Browse, 6 Cmd, 7 Help, 8 Confirm.
+#[cfg(feature = "journey-state")]
+#[no_mangle]
+pub static mut PSXCEL_JOURNEY: [u32; 15] = [0; 15];
+
+#[cfg(feature = "journey-state")]
+impl Editor {
+    fn publish_journey(&self) {
+        let cell = &sheet().cells[idx(self.cur_col, self.cur_row)];
+        let word = |at: usize| {
+            let mut w = 0u32;
+            for i in 0..4 {
+                let b = if at + i < self.edit_len { self.edit_buf[at + i] } else { 0 };
+                w |= u32::from(b) << (8 * i);
+            }
+            w
+        };
+        let mode = match self.mode {
+            Mode::Menu => 0,
+            Mode::Nav => 1,
+            Mode::Edit => 2,
+            Mode::Pick => 3,
+            Mode::Chart => 4,
+            Mode::Browse => 5,
+            Mode::Cmd => 6,
+            Mode::Help => 7,
+            Mode::Confirm => 8,
+        };
+        let kind = match cell.kind {
+            Kind::Empty => 0,
+            Kind::Num => 1,
+            Kind::Text => 2,
+            Kind::Err => 3,
+        };
+        let value = cell.value as u64;
+        let block = core::ptr::addr_of_mut!(PSXCEL_JOURNEY).cast::<u32>();
+        // SAFETY: single-threaded; the block is 15 words.
+        unsafe {
+            block.add(14).write_volatile(0);
+            block.add(0).write_volatile(1);
+            block.add(1).write_volatile(block.add(1).read_volatile().wrapping_add(1));
+            block.add(2).write_volatile(self.frame);
+            block.add(3).write_volatile(mode);
+            block.add(4).write_volatile(self.menu_sel as u32);
+            block.add(5).write_volatile(self.cur_col as u32);
+            block.add(6).write_volatile(self.cur_row as u32);
+            block.add(7).write_volatile(self.edit_len as u32);
+            block.add(8).write_volatile(word(0));
+            block.add(9).write_volatile(word(4));
+            block.add(10).write_volatile(kind);
+            block.add(11).write_volatile(value as u32);
+            block.add(12).write_volatile((value >> 32) as u32);
+            block.add(13).write_volatile(u32::from(cell.len));
+            block.add(14).write_volatile(1);
+        }
+    }
+}
+
 impl Scene for Editor {
     fn init(&mut self, _ctx: &mut Ctx) {
         self.font = Some(FontAtlas::upload(&SPLEEN_5X8, FONT_TPAGE, FONT_CLUT));
@@ -381,6 +451,8 @@ impl Scene for Editor {
         }
         self.keep_cursor_visible();
         self.ease_scroll();
+        #[cfg(feature = "journey-state")]
+        self.publish_journey();
     }
 
     fn render(&mut self, ctx: &mut Ctx) {

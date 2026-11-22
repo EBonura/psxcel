@@ -1,14 +1,14 @@
 # Written by `psoxide-test bless`; edit only by blessing again (decision 4: a bar changes by editing
 # psoxide-test.toml with a reason, never by hand-editing these numbers).
 schema = 1
-blessed_commit = "086b1e6cfe7b93a5b3cfe0b0dac5cb37eaf0f781"
-sdk_pin = "fce1f6855bc1c3e8336cc68be98a3df06ef9a967"
+blessed_commit = "6b2fac65e23b8daf021255d29911e4075e0db679"
+sdk_pin = "6bfe478ff0e0c6e226cdf67b164df311c1658fec"
 
 [size.ship]
-text = 233816
-data = 11208
+text = 235136
+data = 11224
 bss = 105480
-free = 1648072
+free = 1646744
 
 [speed.nav-edit]
 offsets = [-48, -36, -24, -12, 0, 12, 24, 36]
@@ -16,6 +16,15 @@ flips = [995, 995, 1000, 1000, 1000, 1000, 1000, 1000]
 work_per_frame = [551704, 551704, 548948, 548948, 548948, 548948, 548948, 548948]
 frame_work_p99 = [550446, 550446, 550446, 550446, 550446, 550446, 550446, 550446]
 vblanks = ["1:993,6:1", "1:994", "1:999", "1:999", "1:999", "1:999", "1:999", "1:999"]
+legacy_trusted = "086b1e6cfe7b93a5b3cfe0b0dac5cb37eaf0f781"
+
+[speed.nav-edit.identity]
+tape = "pgo/nav-edit.pxtape"
+tape_sha256 = "f75e1b506870d4fb19cb09cd8638f17a5d251864f5061cf9c781556f73f801f3"
+window = "polls 250..1250"
+offsets = [-48, -36, -24, -12, 0, 12, 24, 36]
+launch_args = []
+gate_revision = "97cd078f9d2a33eb6aff274541bccc118f5b12e8"
 
 [journeys.enter-value-formula]
 ticks = 101
@@ -35,4 +44,4 @@ clock_waits = 0
 [host]
 
 [maps]
-ship = "5811f30dd4c1fc1e16f85e197d317bc12aff7665b83b35e08c0f306dcd49ef9e"
+ship = "4f1e020a3a8edc4af703ef081f16ce99b169b09f4fe4ee8b82cf139782620241"

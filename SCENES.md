@@ -55,15 +55,29 @@ The table moves to version 2 with two row kinds: IMAGE rows are load units (LBA 
 
 In v2 terms the program is one base image, `PSX.EXE` (image 0, BOOT_RESIDENT) and one scene, 0 `PSXCEL`. Every mode is an in-program state of image 0 and nothing is read from the disc after the BIOS load, so everything reachable in play is resident. No data rows.
 
-## Boot splash: via .boot, one per disc (pending the SDK change)
+## Boot splash: via .boot, one per disc (built)
 
-Decision (scene-system plan, "Splash: one mechanism, no extra load"): the splash is not dropped and is not a separate scene. psx-splash links into the boot-only `.boot` section of the boot image (sdk/psoxide-boot.ld): stored after `.data`, run from the start of the heap, moved there by `__boot_entry` before `_start`, played once. Only a disc's first program plays it.
+Decision (scene-system plan, "Splash: one mechanism, no extra load"): the splash is not dropped and is not a separate scene. psx-splash links into the boot-only `.boot` section of the boot image (sdk/psoxide-boot.ld): stored after `.data`, run from the start of the heap, moved there by psx-rt's `__boot_entry` before `_start`, played once. Only a disc's first program plays it.
 
-PSXcel has no splash today. As a disc's first program it gains the SDK splash in the boot image's `.boot` section: loaded with the exe in the same read, played once, never resident. Its load grows by what the splash stores: psx_splash's own text and data are 6.3 to 8.3 KB on the other games' maps (3 to 5 sectors), plus whatever it calls that PSXcel does not already link; PLAN estimates about 8 sectors. Not measured. PSXcel links no heap allocator, so the memory sits unused above `__bss_end` after boot.
+Built on SDK lane/disc-scenes-1123 610b97fb661c (pin commit 35b7a84), behind the off-by-default `scene-core` feature (commit 4ce62fb). `Editor::boot_splash` (`main.rs:430`) asks the engine for the splash, which plays it before `init` on a fresh GPU, so PSXcel's SPLEEN font (uploaded in `init` at x 320, where the splash puts BASIC) is untouched. PSXcel keeps no brightness setting, so the splash runs at the default step. `game/build.rs` links `-T psoxide-boot.ld` ahead of psoxide.ld as an ELF, and the Makefile writes the EXE from it with the SDK's `psx-exe` (`BOOT_EXE`, for `build` and `linked`). `make linked FEATURES=scene-core` builds it.
 
-The splash call goes where the brightness setting has been read and the VBlank counter is installed (psx_splash waits on it).
+Measured (maps in the campaign's `itch-1123/core-window-keep/psxcel-610b/`: `off.map` is the default build after the feature commit, `scene-core.map`):
 
-Why this is not built here yet: ld.lld's `--oformat=binary` places sections by run address and ignores `AT()`, so a psoxide-boot.ld link through the flat output these builds use writes `.boot` past `.bss` instead of after `.data` (checked on a small link at the 6bfe scripts: the ELF has the right load address, the flat file does not). It waits for the one SDK-side change (lane/disc-scenes-1123): `.boot` with its run address in the reclaimed region and its load address after `.data`, the exe writer and overlay-compose working from the ELF program headers. Opting in then takes: a repin to that SDK, the `scene-core` feature linking `-T psoxide-boot.ld` ahead of psoxide.ld with `__boot_entry` kept, and the splash call at boot.
+| | default | scene-core |
+|---|---|---|
+| exe header PC | `_start` | `__boot_entry` 0x80010674 |
+| .text / .data / .bss | 235,136 / 11,224 / 105,476 | 238,096 / 11,240 / 105,476 |
+| `.boot` | none | 8,600 B, runs at 0x80066A00..0x80068B98 (`ALIGN(__bss_end, 16)`), stored at 0x8004CDF8 (`__data_end`); `.boot_bss` empty |
+| in `.boot` | | `psx_splash::play` 3,860, `logo::expand` 600, `draw_line` closure 264, `show::<App::run_with_flow::{closure}>` 44 (text); `logo::CODED` 2,746, `FONT_BITMAP` 1,024, `FONT` 28, `logo::PALETTE` 32 (rodata) |
+| `__heap_start` (= `__bss_end`) | 0x80065E5C | 0x800669FC |
+| resident free RAM (to `__heap_end` 0x801F5F00) | 1,638,564 | **1,635,588 (-2,976)** |
+| exe stored size (header) | 247,808 B, 121 sectors | 258,048 B, 126 sectors (**+5 sectors**) |
+
+The splash is not free in resident memory: 2,976 B stay. By symbol (map diff): `FontAtlas::upload` 424 to 1,460 (+1,036: a second caller, so it is no longer specialised for SPLEEN alone); the engine's splash path in `App::run_with_flow` +672 and its pad closure 48; psx-rt's mover `__boot_entry` 44, `__boot_entry_rs` 240 and the I-cache range flush 284; psx-gpu's `draw::<QuadTexturedGouraud>` 236, `draw::<QuadTexturedMaterial>` 200, `DoubleBuffer::clear` 120 and `FontAtlas::draw_text` 40, which only the splash calls but whose names do not carry `psx_splash`, so psoxide-boot.ld leaves them resident (596 B an SDK-side pattern could move); `upload_16bpp` +24, `enter_flow_state` +16, data +16. PSXcel links no heap allocator, so the `.boot` range sits unused above `__bss_end` after boot. `psoxide-size ram` (tools-hc-894d16439831) reports 1,626,984 for the scene-core map: it reads `__heap_start` from the map row's address column, the location counter after `.boot_bss` (0x80068B98), not the symbol (0x800669FC, `llvm-nm`).
+
+Default build: the exe built after the feature commit is byte-identical to the exe of the repin commit 35b7a84 (sha256 6ac826f6...).
+
+Run (frontend 31982f1e5c8d, headless, no input, 600 M instructions, 3,518 route ticks, 3,509 pad polls): the splash plays (tick 80) and the title menu is up at tick 170 with its own font. Frames kept as `core-window-keep/psxcel-boot-splash.png` and `psxcel-boot-first-screen.png`.
 
 ## Shared code versus per scene
 

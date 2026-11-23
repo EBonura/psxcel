@@ -17,6 +17,16 @@ fn main() {
     let ld = repo_root.join(".psoxide/sdk/psoxide.ld");
     let ld = ld.canonicalize().unwrap_or(ld);
 
+    // RAM the program links for, as a `-T` file ahead of psoxide.ld (the way psoxide.ld:16-21
+    // asks, so the link map records the value). 0x1FD800 puts STACK_INIT at 0x801FD700 and
+    // leaves 0x801FD700..0x80200000 to the scene system's resident core window (cap 10,240 B)
+    // and its 256 B handoff block. PROVISIONAL: the number comes from the scene-system plan
+    // (campaign scene-system-1123, PLAN.md 3.2) and the first real core build may move it.
+    const RAM_SIZE_OVERRIDE: u32 = 0x1F_D800;
+    let out = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("ram-size.ld");
+    std::fs::write(&out, format!("RAM_SIZE_OVERRIDE = {RAM_SIZE_OVERRIDE:#X};\n"))
+        .expect("write ram-size.ld");
+    println!("cargo:rustc-link-arg=-T{}", out.display());
     println!("cargo:rustc-link-arg=-T{}", ld.display());
     println!("cargo:rustc-link-arg=--oformat=binary");
     println!("cargo:rerun-if-changed={}", ld.display());

@@ -31,7 +31,7 @@ extern crate psx_rt;
 mod sheet;
 mod theme;
 
-use psx_engine::{button, App, Config, Ctx, Scene};
+use psx_engine::{button, App, BootSplash, Config, ControllerPort, Ctx, Scene};
 use psx_font::fonts::SPLEEN_5X8;
 use psx_font::FontAtlas;
 use psx_gpu::{draw_line_mono, draw_quad_flat, draw_rect_flat, draw_tri_flat};
@@ -425,6 +425,11 @@ impl Editor {
 }
 
 impl Scene for Editor {
+    /// The SDK's boot splash, at the default brightness (PSXcel keeps no brightness setting).
+    fn boot_splash(&mut self, _port: &mut ControllerPort) -> Option<BootSplash> {
+        Some(BootSplash::new("Built with PSoXide"))
+    }
+
     fn init(&mut self, _ctx: &mut Ctx) {
         self.font = Some(FontAtlas::upload(&SPLEEN_5X8, FONT_TPAGE, FONT_CLUT));
         // Boot to the title menu; note whether a card save exists so it can be

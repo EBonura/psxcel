@@ -141,3 +141,13 @@ the disc after boot, today or on the core.
 | journeys (3) and `[cross]` | not expected: `PSXCEL_JOURNEY` keeps its address (no .data/.bss move). Not run |
 | goldens | none (every checkpoint is `golden = false`) |
 | pgo layouts | none (`layout = false`) |
+
+## Correction: where the boot stack really starts
+
+The note above that psx-rt `_start` takes its stack from the exe header is wrong. `_start` never
+sets `$sp`; the BIOS sets it, and when it boots the disc it takes `STACK = 801FFFF0` from the
+SYSTEM.CNF that psx-iso writes for every disc (`crates/psx-iso/src/iso9660.rs:714`), not the
+header's SP. So after the relink the header says 0x801FD700 (or the final window's base) but the
+stack still starts at 0x801FFFF0, inside the core window. Measured on Quake's ship-boot profile
+(`entry_sp = 0x801ffff0`); not measured here, same boot path. Harmless until the core exists:
+`__core_boot` sets `$sp` before `_start`, or SYSTEM.CNF's STACK line has to follow the window.

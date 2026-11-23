@@ -18,6 +18,10 @@ path = "src/main.rs"
 # A read-only observation of the editor for psoxide-test's journeys; never in the shipping disc.
 [features]
 journey-state = []
+# Scene core (campaign scene-system-1123, SCENES.md): as a disc's first program, play the SDK's
+# "Built with PSoXide" splash once at boot, from the SDK's boot-only memory (sdk/psoxide-boot.ld,
+# build.rs): stored after .data, run above .bss, never resident. Off by default.
+scene-core = []
 
 [profile.release]
 # Keep absolute host paths out of the shipped binary. rustc records the

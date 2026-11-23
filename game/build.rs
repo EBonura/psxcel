@@ -27,8 +27,20 @@ fn main() {
     std::fs::write(&out, format!("RAM_SIZE_OVERRIDE = {RAM_SIZE_OVERRIDE:#X};\n"))
         .expect("write ram-size.ld");
     println!("cargo:rustc-link-arg=-T{}", out.display());
+    // `scene-core`: the boot splash runs from the SDK's boot-only memory (sdk/psoxide-boot.ld,
+    // ahead of psoxide.ld). Its sections run apart from where they are stored, so the link is an
+    // ELF and the Makefile writes the EXE from it by load address (psx-exe).
+    let boot = std::env::var_os("CARGO_FEATURE_SCENE_CORE").is_some();
+    if boot {
+        let boot_ld = repo_root.join(".psoxide/sdk/psoxide-boot.ld");
+        let boot_ld = boot_ld.canonicalize().unwrap_or(boot_ld);
+        println!("cargo:rustc-link-arg=-T{}", boot_ld.display());
+        println!("cargo:rerun-if-changed={}", boot_ld.display());
+    }
     println!("cargo:rustc-link-arg=-T{}", ld.display());
-    println!("cargo:rustc-link-arg=--oformat=binary");
+    if !boot {
+        println!("cargo:rustc-link-arg=--oformat=binary");
+    }
     println!("cargo:rerun-if-changed={}", ld.display());
     // Optional linker map for `make gate`; link-only, the image is unchanged.
     println!("cargo:rerun-if-env-changed=PSX_LINK_MAP");

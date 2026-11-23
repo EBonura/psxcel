@@ -66,9 +66,16 @@ repro-rustc: psoxide
 # observation; the shipping build has none).
 FEATURES ?=
 FEATURE_FLAGS = $(if $(strip $(FEATURES)),--features $(strip $(FEATURES)))
+# `scene-core` links an ELF (game/build.rs: the boot splash's sections run apart from where they
+# are stored). BOOT_EXE writes the EXE from it by load address with the SDK's psx-exe and keeps
+# the ELF beside it as psxcel.elf; an EXE that is already one (cargo did not relink) is left alone.
+PSX_EXE  = cargo run -q --release --locked --manifest-path $(PSOXIDE)/Cargo.toml -p psoxide-hazard --bin psx-exe --
+BOOT_EXE = $(if $(findstring scene-core,$(FEATURES)),if head -c 4 "$(EXE)" | grep -q ELF; then \
+	cp "$(EXE)" "$(EXE:.exe=.elf)" && $(PSX_EXE) "$(EXE:.exe=.elf)" "$(EXE).part" && mv "$(EXE).part" "$(EXE)"; fi,true)
 
 build: repro-rustc
 	cd $(GAME) && $(REPRO) cargo build --release $(PANIC_CONFIG) $(FEATURE_FLAGS)
+	$(BOOT_EXE)
 
 # Host-side unit tests (the sheet.rs evaluator/formatter suite). Run from the
 # repo root so game/.cargo/config.toml does not apply: its build-std core
@@ -105,6 +112,7 @@ linked: repro-rustc
 	cd $(GAME) && cargo clean -q --release --target $(TARGET) -p psxcel
 	cd $(GAME) && $(REPRO) PSX_LINK_MAP="$(OUT_DIR)/psxcel.map" cargo build --release $(PANIC_CONFIG) $(FEATURE_FLAGS)
 	@test -s "$(OUT_DIR)/psxcel.map" || { echo "linked: no link map at $(OUT_DIR)/psxcel.map"; exit 1; }
+	$(BOOT_EXE)
 	cd $(MKISOPSX) && cargo run --release -- \
 		--exe "$(EXE)" --out "$(OUT_DIR)/psxcel.bin" --volume PSXCEL \
 		--gate-file "$(ROOT)/psx-gate.toml"

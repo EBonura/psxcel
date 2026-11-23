@@ -425,6 +425,16 @@ impl Editor {
 }
 
 impl Scene for Editor {
+    /// `scene-core`: the SDK's boot splash, which the engine plays once before `init`, from
+    /// boot-only memory (`.boot`, build.rs). PSXcel keeps no brightness setting to apply.
+    #[cfg(feature = "scene-core")]
+    fn boot_splash(
+        &mut self,
+        _port: &mut psx_engine::ControllerPort,
+    ) -> Option<psx_engine::BootSplash> {
+        Some(psx_engine::BootSplash::new("Built with PSoXide"))
+    }
+
     fn init(&mut self, _ctx: &mut Ctx) {
         self.font = Some(FontAtlas::upload(&SPLEEN_5X8, FONT_TPAGE, FONT_CLUT));
         // Boot to the title menu; note whether a card save exists so it can be

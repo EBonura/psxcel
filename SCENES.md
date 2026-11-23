@@ -84,7 +84,7 @@ reserve is now 0x801F5700..0x801FD700.
   0x801Fxxxx addresses: only diagnostics in psx-rt `diag.rs`, behind `console-diag`, which this build
   does not enable).
 - Disc: mkisopsx writes `PSX.EXE` at LBA 22 today. The table wants LBA 22 and the exe at 23, so the
-  mkisopsx option in CORE-ABI 1 ("Who writes it") is needed before PSXcel can boot on the core. No
+  mkisopsx option in CORE-ABI 1 ("Who writes it") is needed before PSXcel can boot on the core. SDK branch lane/disc-scenes-1123 (d486a1eee) adds `mkisopsx --scenes`, which writes the table at 22 and the boot exe at 23; this repo's pin (6bfe) does not have it. No
   PSXcel code depends on the exe's LBA.
 - Boot: `__core_boot` then psx-rt `_start` works as described in CORE-ABI 4.3. `_start` takes the
   stack from the header (psx-rt `lib.rs:164-168`) and reads only `$a0..$a2` (`lib.rs:172`, `lib.rs:199`), so a core

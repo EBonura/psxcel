@@ -12,20 +12,24 @@ PSXcel is one engine scene, `Editor` (`game/src/main.rs:287`), switched between 
 `Mode` field (`main.rs:179-200`, dispatched in `update` at `main.rs:435-445`). Every mode shares the
 same RAM image, the same VRAM and the same (empty) SPU RAM, and changing mode loads and frees nothing.
 
-| What the player sees | In the program | Entered from |
-|---|---|---|
-| Boot: black, then the engine's loading pass (no text) | `GameApp` loading state (SDK `engine/crates/psx-engine/src/game_app.rs:2238-2273`) | power-on, or a core switch |
-| Splash | none: `boot_splash` is the default `None` (SDK `psx-engine/src/scene.rs:527`); no psx-splash symbol in the map | |
-| Title menu: seven samples, plus "Browse saves" when slot 1 has a save | `Mode::Menu`, `draw_menu` (`main.rs:892`) | boot; command menu "Main menu" (`main.rs:1091-1094`) |
-| Sheet grid | `Mode::Nav` | a sample (`open_selection`, `main.rs:873`), a loaded save |
-| On-screen keyboard (cell edit, save name) | `Mode::Edit` | X / Triangle in the grid, "Save" |
-| Point at a cell (formula reference, chart range) | `Mode::Pick` | R1 while editing, chart range pick |
-| Chart (bar, line, area, pie) | `Mode::Chart` | "Chart", the Sales and Expenses samples |
-| Command menu (the pause-like overlay) | `Mode::Cmd` | SELECT in the grid |
-| Help | `Mode::Help` | "Help" |
-| Memory card browser | `Mode::Browse`, `enter_browse` (`main.rs:1342`) | "Browse saves", "Load" |
-| Delete confirm | `Mode::Confirm` | Square in the browser |
-| Exit | none: `main` never returns (`main.rs:2649-2700`, `App::run` is `-> !`) | |
+| What the player sees | In the program | Entered from | Resident in |
+|---|---|---|---|
+| Boot: black, then the engine's loading pass (no text) | `GameApp` loading state (SDK `engine/crates/psx-engine/src/game_app.rs:2238-2273`) | power-on, or a core switch | scene 0 |
+| Splash | none: `boot_splash` is the default `None` (SDK `psx-engine/src/scene.rs:527`); no psx-splash symbol in the map | | n/a |
+| Title menu: seven samples, plus "Browse saves" when slot 1 has a save | `Mode::Menu`, `draw_menu` (`main.rs:892`) | boot; command menu "Main menu" (`main.rs:1091-1094`) | scene 0 |
+| Sheet grid | `Mode::Nav` | a sample (`open_selection`, `main.rs:873`), a loaded save | scene 0 |
+| On-screen keyboard (cell edit, save name) | `Mode::Edit` | X / Triangle in the grid, "Save" | scene 0 |
+| Point at a cell (formula reference, chart range) | `Mode::Pick` | R1 while editing, chart range pick | scene 0 |
+| Chart (bar, line, area, pie) | `Mode::Chart` | "Chart", the Sales and Expenses samples | scene 0 |
+| Command menu (the pause-like overlay) | `Mode::Cmd` | SELECT in the grid | scene 0 |
+| Help | `Mode::Help` | "Help" | scene 0 |
+| Memory card browser | `Mode::Browse`, `enter_browse` (`main.rs:1342`) | "Browse saves", "Load" | scene 0 |
+| Delete confirm | `Mode::Confirm` | Square in the browser | scene 0 |
+| Exit | none: `main` never returns (`main.rs:2649-2700`, `App::run` is `-> !`) | | n/a |
+
+Rule this follows (Manny, 11-23): scene boundaries only where the player already waits today, and
+every in-game screen stays resident in the playing scene. The keyboard, charts, command menu, help and
+card browser are all resident in scene 0 with no disc read.
 
 ## Scene table rows
 
@@ -114,6 +118,16 @@ end in all). The TODO for when the core exists:
    out under `GAMEPLAY_ONLY`), which drops the table above from PSXcel without a PSXcel change.
 3. No exit row: CORE-ABI has `return scene` 0xFFFF and Manny's 11-23 rule is no return to a launcher,
    so PSXcel keeps "Main menu" as its own title and adds no `psx_core_switch` call.
+
+## Load speed (Manny 11-23: every load the same speed or faster)
+
+No code or data that is resident today becomes a disc read: PSXcel is one Program row and never reads
+the disc after boot, today or on the core.
+
+| Transition | Disc read under the core | Measured today | Slower? |
+|---|---|---|---|
+| Boot to first frame | BIOS loads `PSX.EXE`: 121 payload sectors today (0x3C800 B); with the core image stored after `.data` (CORE-ABI 4.1) the payload grows by the core's stored bytes, about 4 to 5 sectors at the 8,192 to 10,240 B cap **(estimate)** | smoke "menu" checkpoint at frame 43 on PCSX-ReARMed, 717-718 on PCSX-Redux (1122 PASS json, `cross`); journey `smoke-boot-nav` 68 ticks (baseline). Boot to first frame alone: not measured | **yes, slightly (estimate):** about 5 more sectors in the BIOS load, about 33 ms at double speed, plus `__core_boot`'s copy and word FNV over the window. Nothing in PSXcel keeps it equal; the core's 8,192 B target keeps it smallest |
+| Any mode change (menu, grid, keyboard, chart, browser) | none | none (all in RAM) | no |
 
 ## Tests, bars and goldens that move
 

@@ -1,5 +1,7 @@
 # PSXcel on the scene core
 
+**Window update (11-23):** the branch now links for the 8,192 B window, `RAM_SIZE_OVERRIDE = 0x1FE000`, core at **0x801FDF00..0x801FFF00**. The figures below were taken at the earlier 10,240 B cap (0x1FD800, SP 0x801FD700) and are kept as measured; at 0x1FE000, computed, not built: free 1,638,552 B (1,636,504 + 2,048), SP 0x801FDF00; text, data and bss unchanged.
+
 How PSXcel maps onto the SDK's scene system (resident core at 0x801FD700..0x801FFF00, handoff block
 at 0x801FFF00..0x80200000, `SCENES.TBL` at member LBA 22). The row format and the link rules are the
 core lane's CORE-ABI.md (campaign `scene-system-1123`, day 0, 11-23). Everything here is written
@@ -46,6 +48,22 @@ memory card, not the disc.
 
 On a demo disc PSXcel would be one Program row in the host's table with its own `lba_offset`. The Private
 pressing leaves it out (`LEAVE_OUT="ARCADE PSXCEL"`, demo disc Makefile:410).
+
+## Scene table v2 (v2, row layout pending)
+
+The table moves to version 2 with two row kinds: IMAGE rows are load units (LBA and flags, sectors, load address, size, FNV, residency class BOOT_RESIDENT, RESIDENT_SET n or SWAP) and SCENE rows are entry points (scene id, image index, entry, name). Several scenes can share an image, several images can be in RAM at once, and switching to a scene whose image is loaded reads nothing. The byte layout is not fixed yet; the v1 rows above stay as the record of what was measured.
+
+In v2 terms the program is one base image, `PSX.EXE` (image 0, BOOT_RESIDENT) and one scene, 0 `PSXCEL`. Every mode is an in-program state of image 0 and nothing is read from the disc after the BIOS load, so everything reachable in play is resident. No data rows.
+
+## Boot splash: via .boot, one per disc (pending the SDK change)
+
+Decision (scene-system plan, "Splash: one mechanism, no extra load"): the splash is not dropped and is not a separate scene. psx-splash links into the boot-only `.boot` section of the boot image (sdk/psoxide-boot.ld): stored after `.data`, run from the start of the heap, moved there by `__boot_entry` before `_start`, played once. Only a disc's first program plays it.
+
+PSXcel has no splash today. As a disc's first program it gains the SDK splash in the boot image's `.boot` section: loaded with the exe in the same read, played once, never resident. Its load grows by what the splash stores: psx_splash's own text and data are 6.3 to 8.3 KB on the other games' maps (3 to 5 sectors), plus whatever it calls that PSXcel does not already link; PLAN estimates about 8 sectors. Not measured. PSXcel links no heap allocator, so the memory sits unused above `__bss_end` after boot.
+
+The splash call goes where the brightness setting has been read and the VBlank counter is installed (psx_splash waits on it).
+
+Why this is not built here yet: ld.lld's `--oformat=binary` places sections by run address and ignores `AT()`, so a psoxide-boot.ld link through the flat output these builds use writes `.boot` past `.bss` instead of after `.data` (checked on a small link at the 6bfe scripts: the ELF has the right load address, the flat file does not). It waits for the one SDK-side change (lane/disc-scenes-1123): `.boot` with its run address in the reclaimed region and its load address after `.data`, the exe writer and overlay-compose working from the ELF program headers. Opting in then takes: a repin to that SDK, the `scene-core` feature linking `-T psoxide-boot.ld` ahead of psoxide.ld with `__boot_entry` kept, and the splash call at boot.
 
 ## Shared code versus per scene
 

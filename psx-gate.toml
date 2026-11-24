@@ -18,11 +18,3 @@ program = "psxcel"
 kind = "feature"
 item = "psx-mc/compress"
 remove = "decision"
-
-# Built by plain cargo (make build), not psoxide-pgo apply, so the executable has no receipt;
-# `make disc` passes this file to mkisopsx.
-[[exception]]
-program = "psxcel"
-kind = "no-receipt"
-item = "-"
-remove = "unscheduled"

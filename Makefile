@@ -66,21 +66,22 @@ repro-rustc: psoxide
 # observation; the shipping build has none).
 FEATURES ?=
 FEATURE_FLAGS = $(if $(strip $(FEATURES)),--features $(strip $(FEATURES)))
-# PSXcel links an ELF (game/build.rs: the scene core's stored copy and the boot splash run apart
-# from where they are stored). EXE_FROM_ELF writes the EXE from it by load address with the SDK's
-# psx-exe and keeps the ELF beside it as psxcel.elf; an EXE that is already one (cargo did not
-# relink) is left alone.
-PSX_EXE  = cargo run -q --release --locked --manifest-path $(PSOXIDE)/Cargo.toml -p psoxide-hazard --bin psx-exe --
-EXE_FROM_ELF = if head -c 4 "$(EXE)" | grep -q ELF; then \
-	cp "$(EXE)" "$(EXE:.exe=.elf)" && $(PSX_EXE) "$(EXE:.exe=.elf)" "$(EXE).part" && mv "$(EXE).part" "$(EXE)"; fi
+# The build goes through the SDK's shared driver (psoxide-pgo apply, variant off: no profile and no
+# layout): it runs under its own psoxide-rustc (the same repro wrapper), writes the PS-X EXE from the
+# ELF by load address (game/build.rs: the scene core's stored copy and the boot splash run apart from
+# where they are stored), runs the hazard patcher and scanner, and stamps the architecture gate's
+# receipt into the image, which a collection disc's press checks.
+PGO   = cargo run -q --release --locked --manifest-path "$(PSOXIDE)/tools/psoxide-pgo/Cargo.toml" --
+APPLY = PSOXIDE="$(PSOXIDE)" $(PGO) apply --crate "$(GAME)" --variant off -- build --release
+# The driver writes the link map here (the one the hazard patcher reads); `linked` copies it out.
+PGO_MAPS := $(GAME)/target/$(TARGET)/psoxide-pgo-maps
 # The disc is a scene disc (SCENES.md): SCENES.TBL at LBA 22 from scenes.manifest (PSXcel is its
 # one Program), the exe at LBA 23, its row checked against the SDK's prebuilt core image.
 CORE_IMAGE := $(PSOXIDE)/sdk/crates/psx-core/prebuilt/psx-core.bin
 SCENE_FLAGS = --scenes "$(ROOT)/scenes.manifest" --core-image "$(CORE_IMAGE)"
 
-build: repro-rustc
-	cd $(GAME) && $(REPRO) cargo build --release $(PANIC_CONFIG) $(FEATURE_FLAGS)
-	$(EXE_FROM_ELF)
+build: psoxide
+	$(APPLY) $(PANIC_CONFIG) $(FEATURE_FLAGS)
 
 # Host-side unit tests (the sheet.rs evaluator/formatter suite). Run from the
 # repo root so game/.cargo/config.toml does not apply: its build-std core
@@ -111,13 +112,14 @@ gate: repro-rustc
 # otherwise re-uses an earlier link of the same features without writing it). The map is link-only:
 # the executable is byte-identical to `make build`'s.
 OUT_DIR ?= $(DIST)
-linked: repro-rustc
+linked: psoxide
 	@mkdir -p "$(OUT_DIR)"
 	rm -f "$(EXE)" "$(OUT_DIR)/psxcel.map"
 	cd $(GAME) && cargo clean -q --release --target $(TARGET) -p psxcel
-	cd $(GAME) && $(REPRO) PSX_LINK_MAP="$(OUT_DIR)/psxcel.map" cargo build --release $(PANIC_CONFIG) $(FEATURE_FLAGS)
+	rm -f "$(PGO_MAPS)"/*.map
+	$(APPLY) $(PANIC_CONFIG) $(FEATURE_FLAGS)
+	cp "$$(/bin/ls -t "$(PGO_MAPS)"/*.map | head -1)" "$(OUT_DIR)/psxcel.map"
 	@test -s "$(OUT_DIR)/psxcel.map" || { echo "linked: no link map at $(OUT_DIR)/psxcel.map"; exit 1; }
-	$(EXE_FROM_ELF)
 	cd $(MKISOPSX) && cargo run --release -- \
 		--exe "$(EXE)" --out "$(OUT_DIR)/psxcel.bin" --volume PSXCEL \
 		--gate-file "$(ROOT)/psx-gate.toml" $(SCENE_FLAGS)

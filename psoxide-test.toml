@@ -16,7 +16,7 @@ map = "psxcel.map"
 # PSXcel is built by plain cargo, not psoxide-pgo apply (the `no-receipt` entry of psx-gate.toml),
 # so there is no placement layout or sample profile to bind.
 layout = false
-layout_reason = "plain cargo build (psx-gate.toml no-receipt): no psoxide-pgo layout or profile exists"
+layout_reason = "psoxide-pgo apply --variant off: no sample profile and no placement layout"
 
 # The journeys' disc: the same program with the editor's read-only observation (cargo feature
 # journey-state, PSXCEL_JOURNEY in its map). Built second: it overwrites the cargo target of the
@@ -29,7 +29,7 @@ collect = { "psxcel.exe" = "game/target/mipsel-sony-psx/release/psxcel.exe" }
 disc = "psxcel.cue"
 map = "psxcel.map"
 layout = false
-layout_reason = "plain cargo build (psx-gate.toml no-receipt): no psoxide-pgo layout or profile exists"
+layout_reason = "psoxide-pgo apply --variant off: no sample profile and no placement layout"
 
 # Size bar: text may not grow and free RAM may not fall (tolerance 0), against the baseline blessed on the
 # repinned build. Reason: that build is already smaller than the one installed in the library (50db82e on

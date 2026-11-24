@@ -46,6 +46,5 @@ psx-osk    = { path = "../.psoxide/sdk/crates/psx-osk" }
 psx-math   = { path = "../.psoxide/sdk/crates/psx-math" }
 # Memory-card save/load (this repo's psx-mc SDK crate), with save compression.
 psx-mc     = { path = "../.psoxide/sdk/crates/psx-mc", features = ["compress"] }
-# The scene core (SCENES.md): `__core_boot` places the shared core in its window at boot and the
-# handoff block says whether a core switch entered this program (no splash then).
+# The scene core (SCENES.md): `__core_boot` places the shared core in its window at boot.
 psx-core   = { path = "../.psoxide/sdk/crates/psx-core", features = ["link"] }

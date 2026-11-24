@@ -183,3 +183,23 @@ header's SP. So after the relink the header says 0x801FD700 (or the final window
 stack still starts at 0x801FFFF0, inside the core window. Measured on Quake's ship-boot profile
 (`entry_sp = 0x801ffff0`); not measured here, same boot path. Harmless until the core exists:
 `__core_boot` sets `$sp` before `_start`, or SYSTEM.CNF's STACK line has to follow the window.
+
+## On the core (11-24, SDK e7c26f8dc19c, branch lane/scene-core-1124)
+
+PSXcel links psx-core and the scripts in CORE-ABI order in every build (no feature). The disc is a scene
+disc from `scenes.manifest`: SCENES.TBL at LBA 22, PSX.EXE at 23 (row: 260,096 B at 0x80010000, core
+hash 0x2dd28a19). The splash plays when the BIOS booted PSXcel and not when a core switch entered it
+(handoff block flag bit 0). Measured on PSoXide (frontends/31982f1e5c8d), ship builds:
+
+| What | Installed e482579 | On the core |
+|---|---|---|
+| Boot to the first menu frame (VBlanks) | 14 | 169 with the splash, 14 without (runtime-skipped variant) |
+| speed nav-edit (anchored), cycles a frame | 548,948 | 549,051 (+0.02%), vblanks 1:999 both |
+| text / free RAM (psoxide-size) | 235,136 / 1,646,744 | 237,916 / 1,635,764 |
+
+Found: psx-splash leaves its 8x8 font in texture page x 320 (its doc says so) and PSXcel's 3x title
+sampled one texel row past its own glyphs, showing a stray underline under the "l"; `init` now clears
+the page's 64x32 atlas rows before uploading SPLEEN_5X8.
+
+On a collection disc PSXcel is `program PSXCEL.EXE psxcel.exe` plus `scene PSXCEL PSXCEL.EXE start`;
+it reads nothing from the disc after its load and switches to nothing.

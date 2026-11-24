@@ -53,10 +53,12 @@ smoke = ["tests/smoke-boot-nav.toml"]
 # catch a hang after that.
 min_distinct = 2
 # The shipping disc has no state block: it must boot and present with no input on every emulator.
-# On the scene core the shipping disc plays the SDK boot splash first (about 155 VBlanks of
-# animation): `until` (psxcel::BUFFER_Y, the draw buffer's y the editor stores every frame, 240 on
-# every second frame) proves PSXcel itself drew, and `after` counts distinct pictures from there.
-boot = { build = "ship", frames = 3000, until = { kind = "ram", sym = "psxcel::BUFFER_Y", size = 2, op = "nonzero" }, after = 600 }
+# OPEN (11-24): on the scene core the SDK boot splash plays first and its animation alone passes
+# this count. `until`/`after` cannot replace it here: after PSXcel's own first state it shows one
+# still picture (its menu), so no condition leaves 2 new pictures after it. Until the harness can
+# judge a still first screen, the smoke journey's state checkpoints on PCSX-ReARMed are what show
+# PSXcel itself starts there.
+boot = { build = "ship", frames = 3000 }
 
 # The formula engine and number formatter (29 tests). One thread: recalc's scratch lives in statics.
 [[host]]

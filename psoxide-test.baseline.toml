@@ -1,47 +1,51 @@
 # Written by `psoxide-test bless`; edit only by blessing again (decision 4: a bar changes by editing
 # psoxide-test.toml with a reason, never by hand-editing these numbers).
 schema = 1
-blessed_commit = "6b2fac65e23b8daf021255d29911e4075e0db679"
-sdk_pin = "6bfe478ff0e0c6e226cdf67b164df311c1658fec"
+blessed_commit = "75b865a2713bc491c05a5a8cdf7d5b7aeeae003e"
+sdk_pin = "e7c26f8dc19c00537bf510088fb9c34a11c3cd26"
 
 [size.ship]
-text = 235136
-data = 11224
-bss = 105480
-free = 1646744
+text = 237916
+data = 11240
+bss = 105476
+free = 1635764
 
 [speed.nav-edit]
 offsets = [-48, -36, -24, -12, 0, 12, 24, 36]
 flips = [995, 995, 1000, 1000, 1000, 1000, 1000, 1000]
-work_per_frame = [551704, 551704, 548948, 548948, 548948, 548948, 548948, 548948]
-frame_work_p99 = [550446, 550446, 550446, 550446, 550446, 550446, 550446, 550446]
+work_per_frame = [551808, 551808, 549051, 549051, 549051, 549051, 549051, 549051]
+frame_work_p99 = [549816, 549801, 549816, 549816, 549816, 549816, 549816, 549816]
 vblanks = ["1:993,6:1", "1:994", "1:999", "1:999", "1:999", "1:999", "1:999", "1:999"]
-legacy_trusted = "086b1e6cfe7b93a5b3cfe0b0dac5cb37eaf0f781"
+layouts = []
 
 [speed.nav-edit.identity]
-tape = "pgo/nav-edit.pxtape"
-tape_sha256 = "f75e1b506870d4fb19cb09cd8638f17a5d251864f5061cf9c781556f73f801f3"
-window = "polls 250..1250"
+tape = "pgo/nav-edit.anchored.pxtape"
+tape_sha256 = "d73d2b203508057751b27ff03c084d141cf587c9bfdfd7712f14e26816526cdf"
+window = 'anchored at {"kind":"ram","op":"nonzero","size":2,"sym":"psxcel::BUFFER_Y"} within 600 polls; polls 243..1243 from the anchor'
 offsets = [-48, -36, -24, -12, 0, 12, 24, 36]
 launch_args = []
 gate_revision = "97cd078f9d2a33eb6aff274541bccc118f5b12e8"
 
 [journeys.enter-value-formula]
-ticks = 101
+ticks = 256
 open_loop = 0
 clock_waits = 0
 
 [journeys.nav-cursor]
-ticks = 79
+ticks = 234
 open_loop = 0
 clock_waits = 0
 
 [journeys.smoke-boot-nav]
-ticks = 68
+ticks = 223
 open_loop = 0
 clock_waits = 0
 
 [host]
 
 [maps]
-ship = "4f1e020a3a8edc4af703ef081f16ce99b169b09f4fe4ee8b82cf139782620241"
+ship = "79c786394dac0715bb13160b7596a3d70b25d9bb82e9f38d6a293d0b64230187"
+
+[load.boot]
+vblanks = 169
+cycles = 96572705

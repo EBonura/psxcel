@@ -53,7 +53,10 @@ smoke = ["tests/smoke-boot-nav.toml"]
 # catch a hang after that.
 min_distinct = 2
 # The shipping disc has no state block: it must boot and present with no input on every emulator.
-boot = { build = "ship", frames = 3000 }
+# On the scene core the shipping disc plays the SDK boot splash first (about 155 VBlanks of
+# animation): `until` (psxcel::BUFFER_Y, the draw buffer's y the editor stores every frame, 240 on
+# every second frame) proves PSXcel itself drew, and `after` counts distinct pictures from there.
+boot = { build = "ship", frames = 3000, until = { kind = "ram", sym = "psxcel::BUFFER_Y", size = 2, op = "nonzero" }, after = 600 }
 
 # The formula engine and number formatter (29 tests). One thread: recalc's scratch lives in statics.
 [[host]]
@@ -102,6 +105,21 @@ name = "PSXcel"
 [[speed]]
 name = "nav-edit"
 build = "ship"
-tape = "pgo/nav-edit.pxtape"
-polls = [250, 1250]
+# Anchored on PSXcel's own first frames (psxcel::BUFFER_Y nonzero), so the boot splash in front moves
+# neither the tape nor the window: pgo/nav-edit.anchored.pxtape is pgo/nav-edit.pxtape re-anchored with
+# `psoxide-test tape-anchor --at-poll 7` (the anchor held at poll 7 on the installed disc e482579), and the
+# window is the same polls 250..1250 counted from that anchor.
+anchor = { kind = "ram", sym = "psxcel::BUFFER_Y", size = 2, op = "nonzero" }
+anchor_max_polls = 600
+tape = "pgo/nav-edit.anchored.pxtape"
+polls = [243, 1243]
 offsets = [-48, -36, -24, -12, 0, 12, 24, 36]
+
+# Boot to PSXcel's first frame of its own (psxcel::BUFFER_Y nonzero), no input. On the scene core this
+# includes the SDK boot splash (the disc's first program plays it). Measured 11-24 on PSoXide
+# (frontends/31982f1e5c8d): installed e482579 14 VBlanks, this build without the splash 14, with it 169.
+[[load]]
+name = "boot"
+build = "ship"
+until = { kind = "ram", sym = "psxcel::BUFFER_Y", size = 2, op = "nonzero" }
+max_polls = 400

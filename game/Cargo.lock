@@ -28,6 +28,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "psx-core"
+version = "0.1.0"
+dependencies = [
+ "psx-scene-abi",
+]
+
+[[package]]
 name = "psx-display"
 version = "0.1.0"
 dependencies = [
@@ -169,6 +176,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "psx-scene-abi"
+version = "0.1.0"
+
+[[package]]
 name = "psx-settings"
 version = "0.1.0"
 dependencies = [
@@ -231,6 +242,7 @@ dependencies = [
 name = "psxcel"
 version = "0.2.0"
 dependencies = [
+ "psx-core",
  "psx-engine",
  "psx-font",
  "psx-gpu",

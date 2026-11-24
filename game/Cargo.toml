@@ -18,10 +18,6 @@ path = "src/main.rs"
 # A read-only observation of the editor for psoxide-test's journeys; never in the shipping disc.
 [features]
 journey-state = []
-# Scene core (campaign scene-system-1123, SCENES.md): as a disc's first program, play the SDK's
-# "Built with PSoXide" splash once at boot, from the SDK's boot-only memory (sdk/psoxide-boot.ld,
-# build.rs): stored after .data, run above .bss, never resident. Off by default.
-scene-core = []
 
 [profile.release]
 # Keep absolute host paths out of the shipped binary. rustc records the
@@ -50,3 +46,6 @@ psx-osk    = { path = "../.psoxide/sdk/crates/psx-osk" }
 psx-math   = { path = "../.psoxide/sdk/crates/psx-math" }
 # Memory-card save/load (this repo's psx-mc SDK crate), with save compression.
 psx-mc     = { path = "../.psoxide/sdk/crates/psx-mc", features = ["compress"] }
+# The scene core (SCENES.md): `__core_boot` places the shared core in its window at boot and the
+# handoff block says whether a core switch entered this program (no splash then).
+psx-core   = { path = "../.psoxide/sdk/crates/psx-core", features = ["link"] }

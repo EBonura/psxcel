@@ -425,17 +425,25 @@ impl Editor {
 }
 
 impl Scene for Editor {
-    /// `scene-core`: the SDK's boot splash, which the engine plays once before `init`, from
-    /// boot-only memory (`.boot`, build.rs). PSXcel keeps no brightness setting to apply.
-    #[cfg(feature = "scene-core")]
+    /// The SDK's boot splash, which the engine plays once before `init`, from boot-only memory
+    /// (`.boot`, build.rs), when PSXcel is the disc's first program. A core switch from another
+    /// program (a collection disc) enters with the splash already shown. PSXcel keeps no
+    /// brightness setting to apply.
     fn boot_splash(
         &mut self,
         _port: &mut psx_engine::ControllerPort,
     ) -> Option<psx_engine::BootSplash> {
-        Some(psx_engine::BootSplash::new("Built with PSoXide"))
+        use psx_core::abi::block;
+        let switched = psx_core::link::block_valid()
+            && psx_core::link::block_word(block::OFF_FLAGS) & block::FLAG_CORE_ENTRY != 0;
+        (!switched).then(|| psx_engine::BootSplash::new("Built with PSoXide"))
     }
 
-    fn init(&mut self, _ctx: &mut Ctx) {
+    fn init(&mut self, ctx: &mut Ctx) {
+        // The boot splash leaves its 8x8 font in this texture page (psx-splash's "VRAM it uses
+        // and leaves behind": 256 by 32 texels at x 320). The 3x title samples one texel row past
+        // its glyphs, so clear the page's atlas rows before PSXcel's smaller atlas goes in.
+        ctx.gpu().draw(&psx_gpu::prim::FillRect::new((320, 0), (64, 32), (0, 0, 0)));
         self.font = Some(FontAtlas::upload(&SPLEEN_5X8, FONT_TPAGE, FONT_CLUT));
         // Boot to the title menu; note whether a card save exists so it can be
         // offered there.

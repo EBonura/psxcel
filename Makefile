@@ -66,16 +66,21 @@ repro-rustc: psoxide
 # observation; the shipping build has none).
 FEATURES ?=
 FEATURE_FLAGS = $(if $(strip $(FEATURES)),--features $(strip $(FEATURES)))
-# `scene-core` links an ELF (game/build.rs: the boot splash's sections run apart from where they
-# are stored). BOOT_EXE writes the EXE from it by load address with the SDK's psx-exe and keeps
-# the ELF beside it as psxcel.elf; an EXE that is already one (cargo did not relink) is left alone.
+# PSXcel links an ELF (game/build.rs: the scene core's stored copy and the boot splash run apart
+# from where they are stored). EXE_FROM_ELF writes the EXE from it by load address with the SDK's
+# psx-exe and keeps the ELF beside it as psxcel.elf; an EXE that is already one (cargo did not
+# relink) is left alone.
 PSX_EXE  = cargo run -q --release --locked --manifest-path $(PSOXIDE)/Cargo.toml -p psoxide-hazard --bin psx-exe --
-BOOT_EXE = $(if $(findstring scene-core,$(FEATURES)),if head -c 4 "$(EXE)" | grep -q ELF; then \
-	cp "$(EXE)" "$(EXE:.exe=.elf)" && $(PSX_EXE) "$(EXE:.exe=.elf)" "$(EXE).part" && mv "$(EXE).part" "$(EXE)"; fi,true)
+EXE_FROM_ELF = if head -c 4 "$(EXE)" | grep -q ELF; then \
+	cp "$(EXE)" "$(EXE:.exe=.elf)" && $(PSX_EXE) "$(EXE:.exe=.elf)" "$(EXE).part" && mv "$(EXE).part" "$(EXE)"; fi
+# The disc is a scene disc (SCENES.md): SCENES.TBL at LBA 22 from scenes.manifest (PSXcel is its
+# one Program), the exe at LBA 23, its row checked against the SDK's prebuilt core image.
+CORE_IMAGE := $(PSOXIDE)/sdk/crates/psx-core/prebuilt/psx-core.bin
+SCENE_FLAGS = --scenes "$(ROOT)/scenes.manifest" --core-image "$(CORE_IMAGE)"
 
 build: repro-rustc
 	cd $(GAME) && $(REPRO) cargo build --release $(PANIC_CONFIG) $(FEATURE_FLAGS)
-	$(BOOT_EXE)
+	$(EXE_FROM_ELF)
 
 # Host-side unit tests (the sheet.rs evaluator/formatter suite). Run from the
 # repo root so game/.cargo/config.toml does not apply: its build-std core
@@ -112,16 +117,16 @@ linked: repro-rustc
 	cd $(GAME) && cargo clean -q --release --target $(TARGET) -p psxcel
 	cd $(GAME) && $(REPRO) PSX_LINK_MAP="$(OUT_DIR)/psxcel.map" cargo build --release $(PANIC_CONFIG) $(FEATURE_FLAGS)
 	@test -s "$(OUT_DIR)/psxcel.map" || { echo "linked: no link map at $(OUT_DIR)/psxcel.map"; exit 1; }
-	$(BOOT_EXE)
+	$(EXE_FROM_ELF)
 	cd $(MKISOPSX) && cargo run --release -- \
 		--exe "$(EXE)" --out "$(OUT_DIR)/psxcel.bin" --volume PSXCEL \
-		--gate-file "$(ROOT)/psx-gate.toml"
+		--gate-file "$(ROOT)/psx-gate.toml" $(SCENE_FLAGS)
 
 disc: build
 	@mkdir -p $(DIST)
 	cd $(MKISOPSX) && cargo run --release -- \
 		--exe "$(EXE)" --out "$(BIN)" --volume PSXCEL \
-		--gate-file "$(ROOT)/psx-gate.toml"
+		--gate-file "$(ROOT)/psx-gate.toml" $(SCENE_FLAGS)
 
 # Headless render of the boot frame, so a change can be eyeballed before burning.
 render: disc

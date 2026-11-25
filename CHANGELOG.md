@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.2 | 2026-11-25
+
+- Runs on the PSoXide scene core (SDK 80d432926e69): the same program boots on its own disc or
+  from the PSoXide demo disc's launcher, which keeps its loading picture up until PSXcel's menu.
+- The "Built with PSoXide" splash plays when PSXcel is a disc's first program, and not when the
+  demo disc's launcher starts it.
+
 ## Source 2026.09.05
 
 This source snapshot is tagged `source-2026.09.05`. Download versions are

@@ -4,7 +4,7 @@ cargo-features = ["trim-paths"]
 
 [package]
 name    = "psxcel"
-version = "0.2.0"
+version = "0.2.2"
 edition = "2021"
 
 # Standalone workspace (not at repo root) so the PSX-target .cargo/config can't
